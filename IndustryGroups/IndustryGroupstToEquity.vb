@@ -7,8 +7,9 @@ Imports CsvHelper.Configuration
 Imports Microsoft.VisualBasic.FileIO
 
 Public Class IndustryGroupstToEquity
+
     ' static function to cvs file
-    Public Shared Function LoadTable(Optional fileName As String = "%DN%\MinDollarVol20MComp80.csv") As Dictionary(Of String, List(Of (TickerSymbol As String, comp As Double)))
+    Public Shared Function LoadTable(Optional fileName As String = "%USERPROFILE%\Downloads\MinDollarVol20MComp80.csv") As Dictionary(Of String, List(Of (TickerSymbol As String, comp As Double)))
         fileName = Environment.ExpandEnvironmentVariables(fileName)
         Dim result = New Dictionary(Of String, List(Of (TickerSymbol As String, comp As Double)))
         Dim name As String

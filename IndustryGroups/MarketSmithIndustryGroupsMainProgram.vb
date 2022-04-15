@@ -2749,7 +2749,7 @@ Module MarketSmithIndustryGroupsMainProgram
 
 
     Sub Main(args As String())
-        Dim ig = IndustryGroupstToEquity.LoadTable("%DN%\MinDollarVol20MComp80.csv")
+        Dim ig = IndustryGroupstToEquity.LoadTable("%USERPROFILE%\Downloads\MinDollarVol20MComp80.csv")
         Dim fileNameList = New SortedDictionary(Of String, (String, Int16)) From {
             {"Extended Stocks", ("X", 13)},
             {"RS Line New High", ("H", 14)},
@@ -2772,13 +2772,15 @@ Module MarketSmithIndustryGroupsMainProgram
         nsMgr.AddNamespace("ss", "urn:schemas-microsoft-com:office:spreadsheet")
         nsMgr.AddNamespace("html", "http://www.w3.org/TR/REC-html40")
         Dim ss As XNamespace = "urn:schemas-microsoft-com:office:spreadsheet"
-        Dim g2 As IEnumerable(Of XElement) = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table/ss:Row", nsMgr)
+        Dim groupRows As IEnumerable(Of XElement) = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table/ss:Row", nsMgr)
+        LoadListFromCsv.LoadIndustryGroups(industryGroups, groupRows, ss, "%USERPROFILE%\Downloads\197 Industry Groups.csv")
+
         For Each name In fileNameList.Keys
-            lists(name) = LoadListFromCsv.LoadListFromCsv("%DN%\" & name & ".csv")
+            lists(name) = LoadListFromCsv.LoadListFromCsv("%USERPROFILE%\Downloads\" & name & ".csv")
             columnNames(fileNameList(name).Item2) = name
         Next
         Dim rowCount = 0
-        For Each row In g2
+        For Each row In groupRows
             Dim cells = row.XPathSelectElements("ss:Cell", nsMgr)
             Dim saveCell As XElement
             Dim cellCount = 0
@@ -2876,7 +2878,9 @@ Module MarketSmithIndustryGroupsMainProgram
             rowCount = rowCount + 1
         Next
 
-        Debug.WriteLine($"g2: {g2.ToString()}")
+        Debug.WriteLine($"g2: {groupRows.ToString()}")
         System.IO.File.WriteAllText("..\..\..\IndustryGroups.xml", "<?xml version=""1.0""?>" & industryGroups.ToString().Replace("&amp;amp;", "&amp;"))
     End Sub
+
+
 End Module
