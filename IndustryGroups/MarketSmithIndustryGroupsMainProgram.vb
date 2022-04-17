@@ -2,6 +2,9 @@ Imports System
 Imports System.Xml
 Imports System.Xml.XPath
 Imports System.Console
+Imports System.IO
+Imports System.Diagnostics
+
 Module MarketSmithIndustryGroupsMainProgram
     Dim industryGroups As XDocument = <?xml version="1.0"?>
                                       <?mso-application progid="Excel.Sheet"?>
@@ -2772,6 +2775,7 @@ Module MarketSmithIndustryGroupsMainProgram
         nsMgr.AddNamespace("ss", "urn:schemas-microsoft-com:office:spreadsheet")
         nsMgr.AddNamespace("html", "http://www.w3.org/TR/REC-html40")
         Dim ss As XNamespace = "urn:schemas-microsoft-com:office:spreadsheet"
+        Dim x As XNamespace = "urn:schemas-microsoft-com:office:excel"
         Dim groupRows As IEnumerable(Of XElement) = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table/ss:Row", nsMgr)
         LoadListFromCsv.LoadIndustryGroups(industryGroups, groupRows, ss, "%USERPROFILE%\Downloads\197 Industry Groups.csv")
 
@@ -2795,10 +2799,10 @@ Module MarketSmithIndustryGroupsMainProgram
                 cellValue = 0
                 For Each cell In cells
                     cellValue = cell.XPathSelectElement("ss:Data", nsMgr).Value
-                    Console.Write($"cellValue: {cellValue} {cellCount} ")
+                    'Console.Write($"cellValue: {cellValue} {cellCount} ")
                     Select Case cellCount
                         Case 1
-                            Write($"replacing ")
+                            'Write($"replacing ")
                             saveCell = cell
                             industryGroupCode = cellValue
                         Case 2
@@ -2814,8 +2818,8 @@ Module MarketSmithIndustryGroupsMainProgram
                     End Select
                     cellCount += 1
                 Next
-                Dim newCellValue = <Cell><Data <%= ss %> StyleID="s62" HRef="https://marketsmith.investors.com/mstool?Symbol={cellValue}&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0">{cellValue}</Data><Data>{cellValue}</Data></Cell>
-                newCellValue = New XElement(ss + "Cell", New XAttribute(ss + "StyleID", hrefStyle), New XAttribute(ss + "HRef", $"https://marketsmith.investors.com/mstool?Symbol={industryGroupCode}&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), industryGroupCode), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"), industryGroupName))
+                'Dim newCellValue = <Cell><Data <%= ss %> StyleID="s62" HRef="https://marketsmith.investors.com/mstool?Symbol={cellValue}&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0">{cellValue}</Data><Data>{cellValue}</Data></Cell>
+                Dim newCellValue = New XElement(ss + "Cell", New XAttribute(ss + "StyleID", hrefStyle), New XAttribute(ss + "HRef", $"https://marketsmith.investors.com/mstool?Symbol={industryGroupCode}&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), industryGroupCode), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"), industryGroupName))
                 '    <Cell ss:StyleID=hrefStyle ss:HRef="https://marketsmith.investors.com/mstool?Symbol=G1315&amp;amp;Periodicity=Daily&amp;amp;InstrumentType=Stock&amp;amp;Source=sitemarketcondition&amp;amp;AlertSubId=8241925&amp;amp;ListId=0&amp;amp;ParentId=0"><Data ss:Type="String">G1315</Data><NamedCell ss:Name="_FilterDatabase"/></Cell> <Cell><Data ss:Type="String">Oil&amp;Gas-Intl Expl&amp;Prod</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
                 saveCell.ReplaceWith(newCellValue)
                 'row.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", "s62"), New XAttribute(ss + "HRef", "https://marketsmith.investors.com/mstool?Symbol=MSFT&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), "MSFT")))
@@ -2823,12 +2827,10 @@ Module MarketSmithIndustryGroupsMainProgram
                 row.Add(New XElement(ss + "Cell", New XElement(ss + "Data", New XAttribute(ss + "Type", "Number"), oneWeekAgoRank - currentRank), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
                 row.Add(New XElement(ss + "Cell", New XElement(ss + "Data", New XAttribute(ss + "Type", "Number"), threeMonthAgoRank - currentRank), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
                 row.Add(New XElement(ss + "Cell", New XElement(ss + "Data", New XAttribute(ss + "Type", "Number"), sixMonthAgoRank - currentRank), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
-                If rowCount > -1 Then
-                End If
                 If industryGroupName <> Nothing And ig.ContainsKey(industryGroupName) Then
                     Dim equities = ig(industryGroupName)
-                    equities.Sort(Function(a As (TickerSymbol As String, comp As Double), b As (TickerSymbol As String, comp As Double))
-                                      Return b.comp.CompareTo(a.comp) ' sort descending order by composite rating
+                    equities.Sort(Function(a As Equity, b As Equity)
+                                      Return b.Composite.CompareTo(a.Composite) ' sort descending order by composite rating
                                   End Function)
                     For Each idx In columnNames.Keys
                         Dim columnName = columnNames(idx)
@@ -2858,7 +2860,7 @@ Module MarketSmithIndustryGroupsMainProgram
                                     annoCount += 1
                                 End If
                             Next
-                            row.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", hrefStyle), New XAttribute(ss + "HRef", $"https://marketsmith.investors.com/mstool?Symbol={e.TickerSymbol}&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), e.TickerSymbol & annotations), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"), industryGroupName)))
+                            row.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", hrefStyle), New XAttribute(ss + "HRef", $"https://marketsmith.investors.com/mstool?Symbol={e.TickerSymbol}&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"), New XAttribute(x + "HRefScreenTip", "comp=" & e.Composite & " RS=" & e.RS & " SMR=" & e.SMR & " $vol=" & e.DollarVolume & " EPS=" & e.EPS), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), e.TickerSymbol & annotations), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"), industryGroupName)))
                         Else
                             Exit For
                         End If
@@ -2879,7 +2881,12 @@ Module MarketSmithIndustryGroupsMainProgram
         Next
 
         Debug.WriteLine($"g2: {groupRows.ToString()}")
-        System.IO.File.WriteAllText("..\..\..\IndustryGroups.xml", "<?xml version=""1.0""?>" & industryGroups.ToString().Replace("&amp;amp;", "&amp;"))
+        Dim outputFileName = Environment.ExpandEnvironmentVariables("%USERPROFILE%\Downloads\IndustryGroups.xml")
+        Dim excel = Environment.ExpandEnvironmentVariables("%MSOFFICE%\EXCEL.EXE")
+        File.WriteAllText(outputFileName, "<?xml version=""1.0""?>" & industryGroups.ToString().Replace("&amp;amp;", "&amp;"))
+        System.Diagnostics.Process.Start(excel, $"/s ""{outputFileName}""")
+        'Dim result = Shell(excel & " " & outputFileName, AppWinStyle.NormalFocus, True)
+
     End Sub
 
 
