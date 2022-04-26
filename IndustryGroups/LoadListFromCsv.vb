@@ -3,12 +3,14 @@ Imports System.Collections.Generic
 Imports Microsoft.VisualBasic.FileIO
 Imports System.Xml
 Imports System.Xml.XPath
-Imports System.Console
+Imports System.Console.WriteLine
 
 Module LoadListFromCsv
     Function LoadIndustryGroups(ByRef industryGroups As XDocument, ByRef groupRows As IEnumerable(Of XElement), ss As XNamespace, hrefStyle As String, Optional fileName As String = "%USERPROFILE%\Downloads\197 Industry Groups.csv") As IEnumerable(Of XElement)
         DeleteIndustryGroupDataRows(groupRows)
+        Dim displayFileName = fileName
         fileName = Environment.ExpandEnvironmentVariables(fileName)
+        IsFileTooOld(fileName, 4, displayFileName)
         Dim symbol As String
         Dim tfp As New TextFieldParser(fileName)
         tfp.Delimiters = New String() {","}
@@ -50,10 +52,27 @@ Module LoadListFromCsv
             groupRows(rowCount).Remove()
         Next
     End Sub
+    Sub IsFileTooOld(ByVal fileName As String, ByVal days As Integer, ByVal displayFileName As String)
+        Dim fileInfo As New FileInfo(fileName)
+        If fileInfo.Exists Then
+            Dim fileDate = fileInfo.LastWriteTime
+            Dim now = DateTime.Now
+            Dim diff = now.Subtract(fileDate)
+            If diff.TotalDays > days Then
+                ' delete the file
+                File.Delete(fileName)
+                Throw New Exception("File is too old: " & displayFileName & " File has been deleted.")
+            End If
+        Else
+            Throw New Exception("File does not exist: " & displayFileName)
+        End If
+    End Sub
 
     Function LoadListFromCsv(Optional fileName As String = "%USERPROFILE%\Downloads\IBD Live Ready.csv") As HashSet(Of String)
         Dim result As New HashSet(Of String)
+        Dim displayFileName = fileName
         fileName = Environment.ExpandEnvironmentVariables(fileName)
+        IsFileTooOld(fileName, 4, displayFileName)
         Dim symbol As String
         Dim tfp As New TextFieldParser(fileName)
         tfp.Delimiters = New String() {","}
