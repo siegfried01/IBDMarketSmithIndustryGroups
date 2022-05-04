@@ -135,8 +135,7 @@ Module MarketSmithIndustryGroupsMainProgram
                                                               ss:Name="_FilterDatabase"/></Cell>
                                                       <Cell ss:StyleID="s66"><Data ss:Type="String">Deletions (D)</Data><NamedCell
                                                               ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell ss:MergeAcross="19" ss:StyleID="s68"><Data ss:Type="String">Top Members</Data><NamedCell
-                                                              ss:Name="_FilterDatabase"/></Cell>
+
                                                   </Row>
                                                   <Row ss:AutoFitHeight="0">
                                                       <Cell><Data ss:Type="Number">1</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
@@ -443,6 +442,7 @@ Module MarketSmithIndustryGroupsMainProgram
 
     Sub Main(args As String())
         Try
+            Dim TopMemberCount = 19
             Dim ig = IndustryGroupstToEquity.LoadTable("%USERPROFILE%\Downloads\MinDollarVol20MComp80.csv")
             Dim fileNameList = New SortedDictionary(Of String, (String, Int16)) From {
             {"Extended Stocks", ("X", 13)},
@@ -467,15 +467,19 @@ Module MarketSmithIndustryGroupsMainProgram
             nsMgr.AddNamespace("html", "http://www.w3.org/TR/REC-html40")
             Dim ss As XNamespace = "urn:schemas-microsoft-com:office:spreadsheet"
             Dim x As XNamespace = "urn:schemas-microsoft-com:office:excel"
-            Dim groupRows As IEnumerable(Of XElement) = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table/ss:Row", nsMgr)
-            LoadListFromCsv.LoadIndustryGroups(industryGroups, groupRows, ss, "%USERPROFILE%\Downloads\197 Industry Groups.csv")
+            Dim industryGroupRows As IEnumerable(Of XElement) = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table/ss:Row", nsMgr)
+            Dim headerRow = industryGroupRows.First() '.XPathSelectElements("ss:Cell", nsMgr).Select(Function(c) c.Value).ToArray()
+            '
+            '<Cell ss:MergeAcross="19" ss:StyleID="s68"><Data ss:Type="String">Top Members</Data><NamedCell ss:Name = "_FilterDatabase" /></Cell>
+            headerRow.Add(New XElement(ss + "Cell", New XAttribute(ss + "MergeAcross", TopMemberCount.ToString), New XAttribute(ss + "StyleID", "s68"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), "Top Members"), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
+            LoadListFromCsv.LoadIndustryGroups(industryGroups, industryGroupRows, ss, "%USERPROFILE%\Downloads\197 Industry Groups.csv")
 
             For Each name In fileNameList.Keys
                 lists(name) = LoadListFromCsv.LoadListFromCsv("%USERPROFILE%\Downloads\" & name & ".csv")
                 columnNames(fileNameList(name).Item2) = name
             Next
             Dim rowCount = 0
-            For Each row In groupRows
+            For Each row In industryGroupRows
                 Dim cells = row.XPathSelectElements("ss:Cell", nsMgr)
                 Dim saveCell As XElement
                 Dim cellCount = 0
@@ -538,7 +542,7 @@ Module MarketSmithIndustryGroupsMainProgram
                         Dim count = 0
                         For Each e In equities
                             Write($" e={e} {count}/{equities.Count}")
-                            If count < 10 Then
+                            If count < TopMemberCount Then
                                 Dim annotations = ""
                                 Dim annoCount = 0
                                 For Each name In fileNameList.Keys
@@ -571,7 +575,7 @@ Module MarketSmithIndustryGroupsMainProgram
                 rowCount = rowCount + 1
             Next
 
-            Debug.WriteLine($"g2: {groupRows.ToString()}")
+            Debug.WriteLine($"g2: {industryGroupRows.ToString()}")
             Dim outputFileName = Environment.ExpandEnvironmentVariables("%USERPROFILE%\Downloads\IndustryGroups.xml")
             Dim excel = Environment.ExpandEnvironmentVariables("%MSOFFICE%\EXCEL.EXE")
             File.WriteAllText(outputFileName, "<?xml version=""1.0""?>" & industryGroups.ToString().Replace("&amp;amp;", "&amp;"))
