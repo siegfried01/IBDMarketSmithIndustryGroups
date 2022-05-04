@@ -4,6 +4,7 @@ Imports System.Xml.XPath
 Imports System.Console
 Imports System.IO
 Imports System.Diagnostics
+Imports System.Xml.Linq
 
 Module MarketSmithIndustryGroupsMainProgram
     Dim industryGroups As XDocument = <?xml version="1.0"?>
@@ -367,46 +368,6 @@ Module MarketSmithIndustryGroupsMainProgram
                                                           x:HRefScreenTip="comp=85 RS=54 SMR=C $vol=33229 EPS=94"><Data ss:Type="String">SNX</Data><NamedCell
                                                               ss:Name="_FilterDatabase"/></Cell>
                                                   </Row>
-                                                  <Row ss:AutoFitHeight="0">
-                                                      <Cell><Data ss:Type="Number">197</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell ss:StyleID="s62" ss:HRef="https://marketsmith.investors.com/mstool?Symbol=G5040&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"><Data
-                                                                                                                                                                                                                                                                                  ss:Type="String">G5040</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="String">Wholesale-Food</Data><NamedCell
-                                                              ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">9</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">33</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">38</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">104</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">174</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">-7.07</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">64</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">5</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">71</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">141</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">0</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">0</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">1</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">1</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">0</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">0</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">0</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">0</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">0</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">0</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell><Data ss:Type="Number">0</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell ss:StyleID="s62" ss:HRef="https://marketsmith.investors.com/mstool?Symbol=SYY&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"
-                                                          x:HRefScreenTip="comp=96 RS=89 SMR=B $vol=213494 EPS=74"><Data
-                                                                                                                       ss:Type="String">SYY-RW</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell ss:StyleID="s62" ss:HRef="https://marketsmith.investors.com/mstool?Symbol=PFGC&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"
-                                                          x:HRefScreenTip="comp=95 RS=87 SMR=C $vol=71427 EPS=70"><Data ss:Type="String">PFGC</Data><NamedCell
-                                                              ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell ss:StyleID="s62" ss:HRef="https://marketsmith.investors.com/mstool?Symbol=USFD&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"
-                                                          x:HRefScreenTip="comp=95 RS=85 SMR=C $vol=77738 EPS=72"><Data ss:Type="String">USFD</Data><NamedCell
-                                                              ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell ss:StyleID="s62" ss:HRef="https://marketsmith.investors.com/mstool?Symbol=UNFI&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"
-                                                          x:HRefScreenTip="comp=84 RS=91 SMR=C $vol=24826 EPS=64"><Data ss:Type="String">UNFI</Data><NamedCell
-                                                              ss:Name="_FilterDatabase"/></Cell>
-                                                  </Row>
                                               </Table>
                                               <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
                                                   <PageSetup>
@@ -467,8 +428,11 @@ Module MarketSmithIndustryGroupsMainProgram
             nsMgr.AddNamespace("html", "http://www.w3.org/TR/REC-html40")
             Dim ss As XNamespace = "urn:schemas-microsoft-com:office:spreadsheet"
             Dim x As XNamespace = "urn:schemas-microsoft-com:office:excel"
+            Dim industryGroupTable = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table", nsMgr).First
+            industryGroupTable.Attributes(ss + "ExpandedColumnCount").Remove
+            industryGroupTable.SetAttributeValue(ss + "ExpandedColumnCount", (25 + TopMemberCount).ToString())
             Dim industryGroupRows As IEnumerable(Of XElement) = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table/ss:Row", nsMgr)
-            Dim headerRow = industryGroupRows.First() '.XPathSelectElements("ss:Cell", nsMgr).Select(Function(c) c.Value).ToArray()
+            Dim headerRow = industryGroupRows.First()
             '
             '<Cell ss:MergeAcross="19" ss:StyleID="s68"><Data ss:Type="String">Top Members</Data><NamedCell ss:Name = "_FilterDatabase" /></Cell>
             headerRow.Add(New XElement(ss + "Cell", New XAttribute(ss + "MergeAcross", TopMemberCount.ToString), New XAttribute(ss + "StyleID", "s68"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), "Top Members"), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
