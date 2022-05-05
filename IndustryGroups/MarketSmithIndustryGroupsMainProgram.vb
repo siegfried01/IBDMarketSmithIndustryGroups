@@ -403,7 +403,7 @@ Module MarketSmithIndustryGroupsMainProgram
 
     Sub Main(args As String())
         Try
-            Dim TopMemberCount = 19
+            Dim TopMemberCount = 29
             Dim ig = IndustryGroupstToEquity.LoadTable("%USERPROFILE%\Downloads\MinDollarVol20MComp80.csv")
             Dim fileNameList = New SortedDictionary(Of String, (String, Int16)) From {
             {"Extended Stocks", ("X", 13)},
@@ -431,7 +431,10 @@ Module MarketSmithIndustryGroupsMainProgram
             Dim industryGroupTable = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table", nsMgr).First
             industryGroupTable.Attributes(ss + "ExpandedColumnCount").Remove
             industryGroupTable.SetAttributeValue(ss + "ExpandedColumnCount", (25 + TopMemberCount).ToString())
+            Dim industryGroupWorksheetNames As XElement = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Names/ss:NamedRange", nsMgr).First
+            industryGroupWorksheetNames.SetAttributeValue(ss + "RefersTo", "Export!R1C1:R198C" & (25 + TopMemberCount).ToString)
             Dim industryGroupRows As IEnumerable(Of XElement) = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table/ss:Row", nsMgr)
+
             Dim headerRow = industryGroupRows.First()
             '
             '<Cell ss:MergeAcross="19" ss:StyleID="s68"><Data ss:Type="String">Top Members</Data><NamedCell ss:Name = "_FilterDatabase" /></Cell>
