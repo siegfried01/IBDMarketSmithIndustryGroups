@@ -403,7 +403,7 @@ Module MarketSmithIndustryGroupsMainProgram
 
     Sub Main(args As String())
         Try
-            Dim TopMemberCount = 29
+            Dim TopMemberCount = 19
             Dim ig = IndustryGroupstToEquity.LoadTable("%USERPROFILE%\Downloads\MinDollarVol20MComp80.csv")
             Dim fileNameList = New SortedDictionary(Of String, (String, Int16)) From {
             {"Extended Stocks", ("X", 13)},
@@ -428,18 +428,10 @@ Module MarketSmithIndustryGroupsMainProgram
             nsMgr.AddNamespace("html", "http://www.w3.org/TR/REC-html40")
             Dim ss As XNamespace = "urn:schemas-microsoft-com:office:spreadsheet"
             Dim x As XNamespace = "urn:schemas-microsoft-com:office:excel"
-            Dim industryGroupTable = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table", nsMgr).First
-            industryGroupTable.Attributes(ss + "ExpandedColumnCount").Remove
-            industryGroupTable.SetAttributeValue(ss + "ExpandedColumnCount", (25 + TopMemberCount).ToString())
-            Dim industryGroupWorksheetNames As XElement = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Names/ss:NamedRange", nsMgr).First
-            industryGroupWorksheetNames.SetAttributeValue(ss + "RefersTo", "Export!R1C1:R198C" & (25 + TopMemberCount).ToString)
+            AdjustIndustryGroupTableColumnCount(TopMemberCount, nsMgr, ss)
+            AdjustWorksheetColumnCount(TopMemberCount, nsMgr, ss)
             Dim industryGroupRows As IEnumerable(Of XElement) = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table/ss:Row", nsMgr)
-
-            Dim headerRow = industryGroupRows.First()
-            '
-            '<Cell ss:MergeAcross="19" ss:StyleID="s68"><Data ss:Type="String">Top Members</Data><NamedCell ss:Name = "_FilterDatabase" /></Cell>
-            headerRow.Add(New XElement(ss + "Cell", New XAttribute(ss + "MergeAcross", TopMemberCount.ToString), New XAttribute(ss + "StyleID", "s68"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), "Top Members"), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
-            LoadListFromCsv.LoadIndustryGroups(industryGroups, industryGroupRows, ss, "%USERPROFILE%\Downloads\197 Industry Groups.csv")
+            AddColumnHeaders(TopMemberCount, ss, industryGroupRows)
 
             For Each name In fileNameList.Keys
                 lists(name) = LoadListFromCsv.LoadListFromCsv("%USERPROFILE%\Downloads\" & name & ".csv")
@@ -464,7 +456,6 @@ Module MarketSmithIndustryGroupsMainProgram
                         'Console.Write($"cellValue: {cellValue} {cellCount} ")
                         Select Case cellCount
                             Case 1
-                                'Write($"replacing ")
                                 saveCell = cell
                                 industryGroupCode = cellValue
                             Case 2
@@ -559,5 +550,22 @@ Module MarketSmithIndustryGroupsMainProgram
 
     End Sub
 
+    Private Sub AddColumnHeaders(ByRef TopMemberCount As Integer, ss As XNamespace, ByRef industryGroupRows As IEnumerable(Of XElement))
+        Dim headerRow = industryGroupRows.First()
+        '
+        '<Cell ss:MergeAcross="19" ss:StyleID="s68"><Data ss:Type="String">Top Members</Data><NamedCell ss:Name = "_FilterDatabase" /></Cell>
+        headerRow.Add(New XElement(ss + "Cell", New XAttribute(ss + "MergeAcross", TopMemberCount.ToString), New XAttribute(ss + "StyleID", "s68"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), "Top Members"), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
+        LoadListFromCsv.LoadIndustryGroups(industryGroups, industryGroupRows, ss, "%USERPROFILE%\Downloads\197 Industry Groups.csv")
+    End Sub
 
+    Private Sub AdjustWorksheetColumnCount(TopMemberCount As Integer, nsMgr As XmlNamespaceManager, ss As XNamespace)
+        Dim industryGroupWorksheetNames As XElement = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Names/ss:NamedRange", nsMgr).First
+        industryGroupWorksheetNames.SetAttributeValue(ss + "RefersTo", "Export!R1C1:R198C" & (25 + TopMemberCount).ToString)
+    End Sub
+
+    Sub AdjustIndustryGroupTableColumnCount(TopMemberCount As Integer, nsMgr As XmlNamespaceManager, ss As XNamespace)
+        Dim industryGroupTable = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table", nsMgr).First
+        industryGroupTable.Attributes(ss + "ExpandedColumnCount").Remove
+        industryGroupTable.SetAttributeValue(ss + "ExpandedColumnCount", (25 + TopMemberCount).ToString())
+    End Sub
 End Module
