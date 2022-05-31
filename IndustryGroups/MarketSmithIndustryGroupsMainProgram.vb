@@ -76,17 +76,17 @@ Module MarketSmithIndustryGroupsMainProgram
                                           </Styles>
                                           <Worksheet ss:Name="Export">
                                               <Names>
-                                                  <NamedRange ss:Name="_FilterDatabase" ss:RefersTo="=Export!R1C1:R198C44"
+                                                  <NamedRange ss:Name="_FilterDatabase" ss:RefersTo="=Export!R1C1:R198C40"
                                                       ss:Hidden="1"/>
                                               </Names>
-                                              <Table ss:ExpandedColumnCount="44" ss:ExpandedRowCount="198" x:FullColumns="1"
+                                              <Table ss:ExpandedColumnCount="40" ss:ExpandedRowCount="198" x:FullColumns="1"
                                                   x:FullRows="1" ss:DefaultColumnWidth="72" ss:DefaultRowHeight="15">
                                                   <Column ss:Width="40.5" ss:Span="1"/>
                                                   <Column ss:Index="3" ss:Width="144"/>
                                                   <Column ss:AutoFitWidth="0" ss:Width="24.75" ss:Span="4"/>
                                                   <Column ss:Index="9" ss:AutoFitWidth="0" ss:Width="35.25"/>
                                                   <Column ss:AutoFitWidth="0" ss:Width="24.75" ss:Span="3"/>
-                                                  <Column ss:Index="14" ss:AutoFitWidth="0" ss:Width="19.5" ss:Span="10"/>
+                                                  <Column ss:Index="14" ss:AutoFitWidth="0" ss:Width="19.5" ss:Span="48"/>
                                                   <Row ss:AutoFitHeight="0" ss:Height="139.5" ss:StyleID="s64">
                                                       <Cell ss:StyleID="s66"><Data ss:Type="String">Order</Data><NamedCell
                                                               ss:Name="_FilterDatabase"/></Cell>
@@ -404,7 +404,13 @@ Module MarketSmithIndustryGroupsMainProgram
     Sub Main(args As String())
         Try
             Dim TopMemberCount = 19
-            Dim ig = IndustryGroupstToEquity.LoadTable("%USERPROFILE%\Downloads\MinDollarVol20MComp80.csv")
+            Dim filesAlreadyLoaded = New HashSet(Of String)
+            Dim additionalFiles = New HashSet(Of String)
+            Dim mostIndustryGroups = "MinDollarVol20MComp80.csv"
+            filesAlreadyLoaded.Add(mostIndustryGroups)
+            filesAlreadyLoaded.Add("197 Industry Groups.csv")
+            Dim ig = IndustryGroupstToEquity.LoadTable($"%USERPROFILE%\Downloads\{mostIndustryGroups}")
+            filesAlreadyLoaded.Add(mostIndustryGroups)
             Dim fileNameList = New SortedDictionary(Of String, (String, Int16)) From {
             {"Extended Stocks", ("X", 13)},
             {"RS Line New High", ("H", 14)},
@@ -416,7 +422,24 @@ Module MarketSmithIndustryGroupsMainProgram
             {"IBD Big Cap 20", ("2", 20)},
             {"Top 30 EPS Rating Stocks with High Avg. Volume", ("V", 21)},
             {"Additions", ("A", 22)},
-            {"Deletions", ("D", 23)}}
+            {"Deletions", ("D", 23)}
+            }
+            '{"Large Cap", ("l", 24)},
+            '{"Mid Cap", ("m", 25)},
+            '{"Small Cap", ("s", 26)}
+
+
+            For Each fileName In fileNameList.Keys
+                If filesAlreadyLoaded.Contains(fileName) Then Continue For
+                filesAlreadyLoaded.Add(fileName)
+            Next
+
+            For Each fileName In Directory.GetFiles(System.Environment.ExpandEnvironmentVariables("%DN%"), "*.csv")
+                fileName = Path.GetFileName(fileName)
+                If filesAlreadyLoaded.Contains(fileName) Then Continue For
+                additionalFiles.Add(fileName)
+            Next
+
             Dim columnNames = New SortedDictionary(Of Int16, String)
             Dim lists = New Dictionary(Of String, HashSet(Of String))
             Dim hrefStyle = "s62"
@@ -428,10 +451,11 @@ Module MarketSmithIndustryGroupsMainProgram
             nsMgr.AddNamespace("html", "http://www.w3.org/TR/REC-html40")
             Dim ss As XNamespace = "urn:schemas-microsoft-com:office:spreadsheet"
             Dim x As XNamespace = "urn:schemas-microsoft-com:office:excel"
-            AdjustIndustryGroupTableColumnCount(TopMemberCount, nsMgr, ss)
-            AdjustWorksheetColumnCount(TopMemberCount, nsMgr, ss)
+            AdjustIndustryGroupTableColumnCount(TopMemberCount + additionalFiles.Count, nsMgr, ss)
+            AdjustWorksheetColumnCount(TopMemberCount + additionalFiles.Count, nsMgr, ss)
             Dim industryGroupRows As IEnumerable(Of XElement) = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table/ss:Row", nsMgr)
-            AddColumnHeaders(TopMemberCount, ss, industryGroupRows)
+            Dim addedColumns = AddAdditionalColumnHeaders(additionalFiles, ss, industryGroupRows, fileNameList, 24)
+            AddTopMembersColumnHeaders(TopMemberCount, ss, industryGroupRows)
 
             For Each name In fileNameList.Keys
                 lists(name) = LoadListFromCsv.LoadListFromCsv("%USERPROFILE%\Downloads\" & name & ".csv")
@@ -550,7 +574,25 @@ Module MarketSmithIndustryGroupsMainProgram
 
     End Sub
 
-    Private Sub AddColumnHeaders(ByRef TopMemberCount As Integer, ss As XNamespace, ByRef industryGroupRows As IEnumerable(Of XElement))
+    Function AddAdditionalColumnHeaders(ByRef fileNameList As IEnumerable(Of String), ss As XNamespace, ByRef industryGroupRows As IEnumerable(Of XElement), ByRef loadedFiles As SortedDictionary(Of String, (String, Int16)), count As Int16) As Int16
+        Dim headerRow = industryGroupRows.First()
+        Dim additionalColumns = 0
+        ' <Cell ss:StyleID="s66"><Data ss:Type="String">Deletions (D)</Data><NamedCell ss:Name = "_FilterDatabase" /></Cell>
+        For Each fileName In fileNameList
+            If fileName.EndsWith(".csv") Then
+                fileName = fileName.Substring(0, fileName.Length - 4)
+            End If
+            If loadedFiles.ContainsKey(fileName) Then
+            Else
+                headerRow.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", "s66"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), fileName), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
+                loadedFiles.Add(fileName, ("", count))
+                count += 1
+                additionalColumns += 1
+            End If
+        Next
+        Return additionalColumns
+    End Function
+    Private Sub AddTopMembersColumnHeaders(ByRef TopMemberCount As Integer, ss As XNamespace, ByRef industryGroupRows As IEnumerable(Of XElement))
         Dim headerRow = industryGroupRows.First()
         '
         '<Cell ss:MergeAcross="19" ss:StyleID="s68"><Data ss:Type="String">Top Members</Data><NamedCell ss:Name = "_FilterDatabase" /></Cell>
