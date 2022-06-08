@@ -551,11 +551,12 @@ Module MarketSmithIndustryGroupsMainProgram
                                 Dim annoCount = 0
                                 For Each name In fileNameList.Keys
                                     Dim list = marketSmithLists(name)
-                                    If list.Contains(e.TickerSymbol) Then
+                                    Dim newAnnotation = fileNameList(name).Item1
+                                    If newAnnotation <> "" And list.Contains(e.TickerSymbol) Then
                                         If annoCount = 0 Then
                                             annotations = "-"
                                         End If
-                                        annotations = annotations & fileNameList(name).Item1
+                                        annotations = annotations & newAnnotation
                                         annoCount += 1
                                     End If
                                 Next
