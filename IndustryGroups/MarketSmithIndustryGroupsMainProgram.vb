@@ -73,6 +73,9 @@ Module MarketSmithIndustryGroupsMainProgram
                                                   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#000000"
                                                       ss:Bold="1"/>
                                               </Style>
+                                              <Style ss:ID="s71">
+                                                  <Interior ss:Color="#FFFF00" ss:Pattern="Solid"/>
+                                              </Style>
                                           </Styles>
                                           <Worksheet ss:Name="Export">
                                               <Names>
@@ -440,8 +443,8 @@ Module MarketSmithIndustryGroupsMainProgram
                 additionalFiles.Add(fileName)
             Next
 
-            Dim columnNames = New SortedDictionary(Of Int16, String)
-            Dim lists = New Dictionary(Of String, HashSet(Of String))
+            Dim marketSmithListColumnNames = New SortedDictionary(Of Int16, String)
+            Dim marketSmithLists = New Dictionary(Of String, HashSet(Of String))
             Dim hrefStyle = "s62"
             Dim nsMgr = New XmlNamespaceManager(New NameTable())
             nsMgr.AddNamespace("", "urn:schemas-microsoft-com:office:spreadsheet")
@@ -458,11 +461,24 @@ Module MarketSmithIndustryGroupsMainProgram
             AddTopMembersColumnHeaders(TopMemberCount, ss, industryGroupRows)
 
             For Each name In fileNameList.Keys
-                lists(name) = LoadListFromCsv.LoadListFromCsv("%USERPROFILE%\Downloads\" & name & ".csv")
-                columnNames(fileNameList(name).Item2) = name
+                marketSmithLists(name) = LoadListFromCsv.LoadListFromCsv("%USERPROFILE%\Downloads\" & name & ".csv")
+                marketSmithListColumnNames(fileNameList(name).Item2) = name
+            Next
+
+            Dim marketSmithByIndustryGroupOfCount As AutoAddDictionary(Of String, AutoAddDictionary(Of String, Int32)) = IndustryGroupMarketSmithListFindMinMax(ig, marketSmithListColumnNames, marketSmithLists, nsMgr, industryGroupRows)
+            Dim MarketSmithListMax As AutoAddDictionary(Of String, Int32) = New AutoAddDictionary(Of String, Int32)
+            For Each idx In marketSmithListColumnNames.Keys
+                Dim marketSmithColumnName = marketSmithListColumnNames(idx)
+                Dim max = Int32.MinValue
+                For Each industryGroupKey In marketSmithByIndustryGroupOfCount.Keys
+                    If marketSmithByIndustryGroupOfCount(industryGroupKey)(marketSmithColumnName) > max Then
+                        max = marketSmithByIndustryGroupOfCount(industryGroupKey)(marketSmithColumnName)
+                    End If
+                Next
+                MarketSmithListMax(marketSmithColumnName) = max
             Next
             Dim rowCount = 0
-            For Each row In industryGroupRows
+            For Each row In industryGroupRows ' second pass thru industry group table
                 Dim cells = row.XPathSelectElements("ss:Cell", nsMgr)
                 Dim saveCell As XElement
                 Dim cellCount = 0
@@ -473,11 +489,10 @@ Module MarketSmithIndustryGroupsMainProgram
                 Dim oneWeekAgoRank As Integer
                 Dim threeMonthAgoRank As Integer
                 Dim sixMonthAgoRank As Integer
-                If rowCount > 0 Then
+                If rowCount > 0 Then ' skip the header row
                     cellValue = 0
                     For Each cell In cells
                         cellValue = cell.XPathSelectElement("ss:Data", nsMgr).Value
-                        'Console.Write($"cellValue: {cellValue} {cellCount} ")
                         Select Case cellCount
                             Case 1
                                 saveCell = cell
@@ -505,30 +520,37 @@ Module MarketSmithIndustryGroupsMainProgram
                     row.Add(New XElement(ss + "Cell", New XElement(ss + "Data", New XAttribute(ss + "Type", "Number"), threeMonthAgoRank - currentRank), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
                     row.Add(New XElement(ss + "Cell", New XElement(ss + "Data", New XAttribute(ss + "Type", "Number"), sixMonthAgoRank - currentRank), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
                     If industryGroupName <> Nothing And ig.ContainsKey(industryGroupName) Then
-                        Dim equities = ig(industryGroupName)
-                        equities.Sort(Function(a As Equity, b As Equity)
-                                          Return b.Composite.CompareTo(a.Composite) ' sort descending order by composite rating
-                                      End Function)
-                        For Each idx In columnNames.Keys
-                            Dim columnName = columnNames(idx)
-                            Dim list = lists(columnName)
+                        Dim stocksInCurrentIndustryGroup = ig(industryGroupName)
+                        stocksInCurrentIndustryGroup.Sort(Function(a As Equity, b As Equity)
+                                                              Return b.Composite.CompareTo(a.Composite) ' sort descending order by composite rating
+                                                          End Function)
+                        For Each idx In marketSmithListColumnNames.Keys
+                            Dim marketSmithColumnName = marketSmithListColumnNames(idx)
+                            Dim marketSmithList = marketSmithLists(marketSmithColumnName)
                             Dim count2 = 0
-                            For Each e In equities
-                                If list.Contains(e.TickerSymbol) Then
+                            For Each stock In stocksInCurrentIndustryGroup
+                                If marketSmithList.Contains(stock.TickerSymbol) Then
                                     count2 += 1
                                 End If
                             Next
-                            row.Add(New XElement(ss + "Cell", New XElement(ss + "Data", New XAttribute(ss + "Type", "Number"), count2), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
+                            Dim max = MarketSmithListMax(marketSmithColumnName)
+                            If max = count2 And max > 0 Then
+                                WriteLine($"count2={count2} is max (={max})--------------------------------------------")
+                                row.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", "s71"), New XElement(ss + "Data", New XAttribute(ss + "Type", "Number"), count2), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
+                            Else
+                                WriteLine($"Not a maximum : count2={count2} max = {max}")
+                                row.Add(New XElement(ss + "Cell", New XElement(ss + "Data", New XAttribute(ss + "Type", "Number"), count2), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
+                            End If
                         Next
 
                         Dim count = 0
-                        For Each e In equities
-                            Write($" e={e} {count}/{equities.Count}")
+                        For Each e In stocksInCurrentIndustryGroup
+                            'Write($" e={e} {count}/{stocksInCurrentIndustryGroup.Count}")
                             If count < TopMemberCount Then
                                 Dim annotations = ""
                                 Dim annoCount = 0
                                 For Each name In fileNameList.Keys
-                                    Dim list = lists(name)
+                                    Dim list = marketSmithLists(name)
                                     If list.Contains(e.TickerSymbol) Then
                                         If annoCount = 0 Then
                                             annotations = "-"
@@ -544,20 +566,20 @@ Module MarketSmithIndustryGroupsMainProgram
                             count += 1
                         Next
                     Else
-                        For Each idx In columnNames.Keys
-                            Dim columnName = columnNames(idx)
+                        For Each idx In marketSmithListColumnNames.Keys
+                            Dim columnName = marketSmithListColumnNames(idx)
                             Dim count = 0
                             row.Add(New XElement(ss + "Cell", New XElement(ss + "Data", New XAttribute(ss + "Type", "Number"), count), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
                         Next
                     End If
-                    WriteLine()
+                    'WriteLine()
                 Else
-                    WriteLine("header")
+                    'WriteLine("header")
                 End If
                 rowCount = rowCount + 1
             Next
 
-            Debug.WriteLine($"g2: {industryGroupRows.ToString()}")
+            'Debug.WriteLine($"g2: {industryGroupRows.ToString()}")
             Dim outputFileName = Environment.ExpandEnvironmentVariables("%USERPROFILE%\Downloads\IndustryGroups.xml")
             Dim excel = Environment.ExpandEnvironmentVariables("%MSOFFICE%\EXCEL.EXE")
             File.WriteAllText(outputFileName, "<?xml version=""1.0""?>" & industryGroups.ToString().Replace("&amp;amp;", "&amp;"))
@@ -573,6 +595,49 @@ Module MarketSmithIndustryGroupsMainProgram
         End Try
 
     End Sub
+
+    Private Function IndustryGroupMarketSmithListFindMinMax(ig As Dictionary(Of String, List(Of Equity)), marketSmithListColumnNames As SortedDictionary(Of Short, String), marketSmithLists As Dictionary(Of String, HashSet(Of String)), nsMgr As XmlNamespaceManager, industryGroupRows As IEnumerable(Of XElement)) As AutoAddDictionary(Of String, AutoAddDictionary(Of String, Int32))
+        Dim rowCount0 = 0
+        Dim marketSmithByIndustryGroupOfCount = New AutoAddDictionary(Of String, AutoAddDictionary(Of String, Int32))
+        For Each row In industryGroupRows 'first pass thru industry group table
+            Dim cells = row.XPathSelectElements("ss:Cell", nsMgr)
+            Dim cellCount = 0
+            Dim cellValue As String
+            Dim industryGroupName As String
+            If rowCount0 > 0 Then ' skip the header row
+                cellValue = 0
+                For Each cell In cells
+                    cellValue = cell.XPathSelectElement("ss:Data", nsMgr).Value
+                    Select Case cellCount
+                        Case 2
+                            industryGroupName = cellValue
+                            Exit For
+                    End Select
+                    cellCount += 1
+                Next
+                If industryGroupName <> Nothing And ig.ContainsKey(industryGroupName) Then
+                    Dim stocksInCurrentIndustryGroup = ig(industryGroupName)
+                    stocksInCurrentIndustryGroup.Sort(Function(a As Equity, b As Equity)
+                                                          Return b.Composite.CompareTo(a.Composite) ' sort descending order by composite rating
+                                                      End Function)
+                    For Each idx In marketSmithListColumnNames.Keys
+                        Dim columnName = marketSmithListColumnNames(idx)
+                        Dim marketSmithList = marketSmithLists(columnName)
+                        Dim count2 = 0
+                        For Each stock In stocksInCurrentIndustryGroup
+                            If marketSmithList.Contains(stock.TickerSymbol) Then
+                                count2 += 1
+                            End If
+                        Next
+                        marketSmithByIndustryGroupOfCount(industryGroupName)(columnName) = count2
+                    Next
+                End If
+            End If
+            rowCount0 += 1
+        Next
+
+        Return marketSmithByIndustryGroupOfCount
+    End Function
 
     Function AddAdditionalColumnHeaders(ByRef fileNameList As IEnumerable(Of String), ss As XNamespace, ByRef industryGroupRows As IEnumerable(Of XElement), ByRef loadedFiles As SortedDictionary(Of String, (String, Int16)), count As Int16) As Int16
         Dim headerRow = industryGroupRows.First()
