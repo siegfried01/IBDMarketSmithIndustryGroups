@@ -139,10 +139,11 @@ Module MarketSmithIndustryGroupsMainProgram
                                                               ss:Name="_FilterDatabase"/></Cell>
                                                       <Cell ss:StyleID="s66"><Data ss:Type="String">Top 30 RS Rating High Vol (V)</Data><NamedCell
                                                               ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell ss:StyleID="s66"><Data ss:Type="String">Additions (A)</Data><NamedCell
-                                                              ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell ss:StyleID="s66"><Data ss:Type="String">Deletions (D)</Data><NamedCell
-                                                              ss:Name="_FilterDatabase"/></Cell>
+                                                      <Cell ss:StyleID="s66"><Data ss:Type="String">Additions (A)</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
+                                                      <Cell ss:StyleID="s66"><Data ss:Type="String">Deletions (D)</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
+                                                      <Cell ss:StyleID="s66"><Data ss:Type="String">Large Cap (l)</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
+                                                      <Cell ss:StyleID="s66"><Data ss:Type="String">Mid Cap (m)</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
+                                                      <Cell ss:StyleID="s66"><Data ss:Type="String">Small Cap (s)</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
 
                                                   </Row>
                                                   <Row ss:AutoFitHeight="0">
@@ -429,11 +430,12 @@ Module MarketSmithIndustryGroupsMainProgram
             {"IBD Big Cap 20", ("2", 20)},
             {"Top 30 EPS Rating Stocks with High Avg. Volume", ("V", 21)},
             {"Additions", ("A", 22)},
-            {"Deletions", ("D", 23)}
+            {"Deletions", ("D", 23)},
+            {"Large Cap", ("l", 24)},
+            {"Mid Cap", ("m", 25)},
+            {"Small Cap", ("s", 26)}
             }
-            '{"Large Cap", ("l", 24)},
-            '{"Mid Cap", ("m", 25)},
-            '{"Small Cap", ("s", 26)}
+            Dim nextColumn = fileNameList("Small Cap").Item2 + 1
 
 
             For Each fileName In fileNameList.Keys
@@ -462,7 +464,7 @@ Module MarketSmithIndustryGroupsMainProgram
             AdjustIndustryGroupTableColumnCount(TopMemberCount + additionalFiles.Count, nsMgr, ss)
             AdjustWorksheetColumnCount(TopMemberCount + additionalFiles.Count, nsMgr, ss)
             Dim industryGroupRows As IEnumerable(Of XElement) = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table/ss:Row", nsMgr)
-            Dim addedColumns = AddAdditionalColumnHeaders(additionalFiles, ss, industryGroupRows, fileNameList, 24)
+            Dim addedColumns = AddAdditionalColumnHeaders(additionalFiles, ss, industryGroupRows, fileNameList, nextColumn)
             AddTopMembersColumnHeaders(TopMemberCount, ss, industryGroupRows)
 
             For Each name In fileNameList.Keys
