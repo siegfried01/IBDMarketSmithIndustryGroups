@@ -76,6 +76,10 @@ Module MarketSmithIndustryGroupsMainProgram
                                               <Style ss:ID="s71">
                                                   <Interior ss:Color="#FFFF00" ss:Pattern="Solid"/>
                                               </Style>
+                                              <Style ss:ID="s72" ss:Parent="s62">
+                                                  <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#0066CC"
+                                                      ss:StrikeThrough="1" ss:Underline="Single"/>
+                                              </Style>
                                           </Styles>
                                           <Worksheet ss:Name="Export">
                                               <Names>
@@ -445,7 +449,8 @@ Module MarketSmithIndustryGroupsMainProgram
 
             Dim marketSmithListColumnNames = New SortedDictionary(Of Int16, String)
             Dim marketSmithLists = New Dictionary(Of String, HashSet(Of String))
-            Dim hrefStyle = "s62"
+            Dim hrefStyleNormal = "s62"
+            Dim hrefStyleStrikeThru = "s72"
             Dim nsMgr = New XmlNamespaceManager(New NameTable())
             nsMgr.AddNamespace("", "urn:schemas-microsoft-com:office:spreadsheet")
             nsMgr.AddNamespace("o", "urn:schemas-microsoft-com:office:office")
@@ -511,7 +516,7 @@ Module MarketSmithIndustryGroupsMainProgram
                         cellCount += 1
                     Next
                     'Dim newCellValue = <Cell><Data <%= ss %> StyleID="s62" HRef="https://marketsmith.investors.com/mstool?Symbol={cellValue}&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0">{cellValue}</Data><Data>{cellValue}</Data></Cell>
-                    Dim newCellValue = New XElement(ss + "Cell", New XAttribute(ss + "StyleID", hrefStyle), New XAttribute(ss + "HRef", $"https://marketsmith.investors.com/mstool?Symbol={industryGroupCode}&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), industryGroupCode), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"), industryGroupName))
+                    Dim newCellValue = New XElement(ss + "Cell", New XAttribute(ss + "StyleID", hrefStyleNormal), New XAttribute(ss + "HRef", $"https://marketsmith.investors.com/mstool?Symbol={industryGroupCode}&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), industryGroupCode), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"), industryGroupName))
                     '    <Cell ss:StyleID=hrefStyle ss:HRef="https://marketsmith.investors.com/mstool?Symbol=G1315&amp;amp;Periodicity=Daily&amp;amp;InstrumentType=Stock&amp;amp;Source=sitemarketcondition&amp;amp;AlertSubId=8241925&amp;amp;ListId=0&amp;amp;ParentId=0"><Data ss:Type="String">G1315</Data><NamedCell ss:Name="_FilterDatabase"/></Cell> <Cell><Data ss:Type="String">Oil&amp;Gas-Intl Expl&amp;Prod</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
                     saveCell.ReplaceWith(newCellValue)
                     'row.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", "s62"), New XAttribute(ss + "HRef", "https://marketsmith.investors.com/mstool?Symbol=MSFT&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), "MSFT")))
@@ -544,7 +549,7 @@ Module MarketSmithIndustryGroupsMainProgram
                         Next
 
                         Dim count = 0
-                        For Each e In stocksInCurrentIndustryGroup
+                        For Each stock In stocksInCurrentIndustryGroup
                             'Write($" e={e} {count}/{stocksInCurrentIndustryGroup.Count}")
                             If count < TopMemberCount Then
                                 Dim annotations = ""
@@ -552,7 +557,7 @@ Module MarketSmithIndustryGroupsMainProgram
                                 For Each name In fileNameList.Keys
                                     Dim list = marketSmithLists(name)
                                     Dim newAnnotation = fileNameList(name).Item1
-                                    If newAnnotation <> "" And list.Contains(e.TickerSymbol) Then
+                                    If newAnnotation <> "" And list.Contains(stock.TickerSymbol) Then
                                         If annoCount = 0 Then
                                             annotations = "-"
                                         End If
@@ -560,7 +565,13 @@ Module MarketSmithIndustryGroupsMainProgram
                                         annoCount += 1
                                     End If
                                 Next
-                                row.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", hrefStyle), New XAttribute(ss + "HRef", $"https://marketsmith.investors.com/mstool?Symbol={e.TickerSymbol}&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"), New XAttribute(x + "HRefScreenTip", "comp=" & e.Composite & " RS=" & e.RS & " SMR=" & e.SMR & " $vol=" & e.DollarVolume & " EPS=" & e.EPS), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), e.TickerSymbol & annotations), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"), industryGroupName)))
+                                Dim hrefStyle As String
+                                If annotations.Contains("X") Then
+                                    hrefStyle = hrefStyleStrikeThru
+                                Else
+                                    hrefStyle = hrefStyleNormal
+                                End If
+                                row.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", hrefStyle), New XAttribute(ss + "HRef", $"https://marketsmith.investors.com/mstool?Symbol={stock.TickerSymbol}&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"), New XAttribute(x + "HRefScreenTip", "comp=" & stock.Composite & " RS=" & stock.RS & " SMR=" & stock.SMR & " $vol=" & stock.DollarVolume & " EPS=" & stock.EPS), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), stock.TickerSymbol & annotations), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"), industryGroupName)))
                             Else
                                 Exit For
                             End If
