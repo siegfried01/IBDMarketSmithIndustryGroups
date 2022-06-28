@@ -419,7 +419,9 @@ Module MarketSmithIndustryGroupsMainProgram
             filesAlreadyLoaded.Add("197 Industry Groups.csv")
             Dim ig = IndustryGroupstToEquity.LoadTable($"%USERPROFILE%\Downloads\{mostIndustryGroups}")
             filesAlreadyLoaded.Add(mostIndustryGroups)
-            Dim fileNameList = New SortedDictionary(Of String, (String, Int16)) From {
+
+            ' Stocks in Favorite Lists have a custom single character identifier that appears as a suffix for the ticker symbol and in the column header in parentheses.
+            Dim fileNameFavoritesList = New SortedDictionary(Of String, (String, Int16)) From {
             {"Extended Stocks", ("X", 13)},
             {"RS Line New High", ("H", 14)},
             {"IBD Live Ready", ("R", 15)},
@@ -435,10 +437,10 @@ Module MarketSmithIndustryGroupsMainProgram
             {"Mid Cap", ("m", 25)},
             {"Small Cap", ("s", 26)}
             }
-            Dim nextColumn = fileNameList("Small Cap").Item2 + 1
+            Dim nextColumn = fileNameFavoritesList("Small Cap").Item2 + 1
 
 
-            For Each fileName In fileNameList.Keys
+            For Each fileName In fileNameFavoritesList.Keys
                 If filesAlreadyLoaded.Contains(fileName) Then Continue For
                 filesAlreadyLoaded.Add(fileName)
             Next
@@ -464,14 +466,16 @@ Module MarketSmithIndustryGroupsMainProgram
             AdjustIndustryGroupTableColumnCount(TopMemberCount + additionalFiles.Count, nsMgr, ss)
             AdjustWorksheetColumnCount(TopMemberCount + additionalFiles.Count, nsMgr, ss)
             Dim industryGroupRows As IEnumerable(Of XElement) = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table/ss:Row", nsMgr)
-            Dim addedColumns = AddAdditionalColumnHeaders(additionalFiles, ss, industryGroupRows, fileNameList, nextColumn)
+            Dim addedColumns = AddAdditionalColumnHeaders(additionalFiles, ss, industryGroupRows, fileNameFavoritesList, nextColumn)
             AddTopMembersColumnHeaders(TopMemberCount, ss, industryGroupRows)
 
-            For Each name In fileNameList.Keys
+            For Each name In fileNameFavoritesList.Keys
                 marketSmithLists(name) = LoadListFromCsv.LoadListFromCsv("%USERPROFILE%\Downloads\" & name & ".csv")
-                marketSmithListColumnNames(fileNameList(name).Item2) = name
+                marketSmithListColumnNames(fileNameFavoritesList(name).Item2) = name
+                ' add XML column headers here
             Next
 
+            ' compute maximum values for each column for highlighting later
             Dim marketSmithByIndustryGroupOfCount As AutoAddDictionary(Of String, AutoAddDictionary(Of String, Int32)) = IndustryGroupMarketSmithListFindMinMax(ig, marketSmithListColumnNames, marketSmithLists, nsMgr, industryGroupRows)
             Dim MarketSmithListMax As AutoAddDictionary(Of String, Int32) = New AutoAddDictionary(Of String, Int32)
             For Each idx In marketSmithListColumnNames.Keys
@@ -556,9 +560,9 @@ Module MarketSmithIndustryGroupsMainProgram
                             If count < TopMemberCount Then
                                 Dim annotations = ""
                                 Dim annoCount = 0
-                                For Each name In fileNameList.Keys
+                                For Each name In fileNameFavoritesList.Keys
                                     Dim list = marketSmithLists(name)
-                                    Dim newAnnotation = fileNameList(name).Item1
+                                    Dim newAnnotation = fileNameFavoritesList(name).Item1
                                     If newAnnotation <> "" And list.Contains(stock.TickerSymbol) Then
                                         If annoCount = 0 Then
                                             annotations = "-"
