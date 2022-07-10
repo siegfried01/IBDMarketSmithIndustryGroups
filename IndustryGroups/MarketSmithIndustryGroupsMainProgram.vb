@@ -413,15 +413,14 @@ Module MarketSmithIndustryGroupsMainProgram
         Try
             Dim TopMemberCount = 19
             Dim filesAlreadyLoaded = New HashSet(Of String)
-            Dim additionalFiles = New HashSet(Of String)
+            Dim additionalNonFavoriteFiles = New HashSet(Of String)
             Dim mostIndustryGroups = "MinDollarVol20MComp80.csv"
             filesAlreadyLoaded.Add(mostIndustryGroups)
             filesAlreadyLoaded.Add("197 Industry Groups.csv")
             Dim ig = IndustryGroupstToEquity.LoadTable($"%USERPROFILE%\Downloads\{mostIndustryGroups}")
-            filesAlreadyLoaded.Add(mostIndustryGroups)
 
             ' Stocks in Favorite Lists have a custom single character identifier that appears as a suffix for the ticker symbol and in the column header in parentheses.
-            Dim fileNameFavoritesList = New SortedDictionary(Of String, (String, Int16)) From {
+            Dim fileNameFavoritesList = New SortedDictionary(Of String, (tickerSymbolAnnotation As String, excelColumn As Int16)) From {
             {"Extended Stocks", ("X", 13)},
             {"RS Line New High", ("H", 14)},
             {"IBD Live Ready", ("R", 15)},
@@ -437,7 +436,7 @@ Module MarketSmithIndustryGroupsMainProgram
             {"Mid Cap", ("m", 25)},
             {"Small Cap", ("s", 26)}
             }
-            Dim nextColumn = fileNameFavoritesList("Small Cap").Item2 + 1
+            Dim nextColumn = fileNameFavoritesList("Small Cap").excelColumn + 1
 
 
             For Each fileName In fileNameFavoritesList.Keys
@@ -448,7 +447,7 @@ Module MarketSmithIndustryGroupsMainProgram
             For Each fileName In Directory.GetFiles(System.Environment.ExpandEnvironmentVariables("%DN%"), "*.csv")
                 fileName = Path.GetFileName(fileName)
                 If filesAlreadyLoaded.Contains(fileName) Then Continue For
-                additionalFiles.Add(fileName)
+                additionalNonFavoriteFiles.Add(fileName)
             Next
 
             Dim marketSmithListColumnNames = New SortedDictionary(Of Int16, String)
@@ -463,15 +462,16 @@ Module MarketSmithIndustryGroupsMainProgram
             nsMgr.AddNamespace("html", "http://www.w3.org/TR/REC-html40")
             Dim ss As XNamespace = "urn:schemas-microsoft-com:office:spreadsheet"
             Dim x As XNamespace = "urn:schemas-microsoft-com:office:excel"
-            AdjustIndustryGroupTableColumnCount(TopMemberCount + additionalFiles.Count, nsMgr, ss)
-            AdjustWorksheetColumnCount(TopMemberCount + additionalFiles.Count, nsMgr, ss)
+            AdjustIndustryGroupTableColumnCount(TopMemberCount + additionalNonFavoriteFiles.Count, nsMgr, ss)
+            AdjustWorksheetColumnCount(TopMemberCount + additionalNonFavoriteFiles.Count, nsMgr, ss)
             Dim industryGroupRows As IEnumerable(Of XElement) = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table/ss:Row", nsMgr)
-            Dim addedColumns = AddAdditionalColumnHeaders(additionalFiles, ss, industryGroupRows, fileNameFavoritesList, nextColumn)
+            'Dim filterDimensions = industryGroups.XPathEvaluate("ss:Workbook/ss:Worksheet/ss:Names/ss:NamedRange/@ss:RefersTo", nsMgr)
+            Dim addedColumns = AddAdditionalColumnHeaders(additionalNonFavoriteFiles, ss, industryGroupRows, fileNameFavoritesList, nextColumn)
             AddTopMembersColumnHeaders(TopMemberCount, ss, industryGroupRows)
 
             For Each name In fileNameFavoritesList.Keys
                 marketSmithLists(name) = LoadListFromCsv.LoadListFromCsv("%USERPROFILE%\Downloads\" & name & ".csv")
-                marketSmithListColumnNames(fileNameFavoritesList(name).Item2) = name
+                marketSmithListColumnNames(fileNameFavoritesList(name).excelColumn) = name
                 ' add XML column headers here
             Next
 
@@ -562,7 +562,7 @@ Module MarketSmithIndustryGroupsMainProgram
                                 Dim annoCount = 0
                                 For Each name In fileNameFavoritesList.Keys
                                     Dim list = marketSmithLists(name)
-                                    Dim newAnnotation = fileNameFavoritesList(name).Item1
+                                    Dim newAnnotation = fileNameFavoritesList(name).tickerSymbolAnnotation
                                     If newAnnotation <> "" And list.Contains(stock.TickerSymbol) Then
                                         If annoCount = 0 Then
                                             annotations = "-"
