@@ -64,7 +64,7 @@ Module LoadListFromCsv
                 Throw New Exception("File is too old: " & displayFileName & " File has been deleted.")
             End If
         Else
-            Throw New Exception("File does not exist: " & displayFileName)
+            Throw New MissingFile(fileName)
         End If
     End Sub
 
@@ -79,22 +79,28 @@ Module LoadListFromCsv
         tfp.Delimiters = New String() {","}
         tfp.TextFieldType = FieldType.Delimited
 
-        Try
-            Dim colArray = tfp.ReadLine().Split(","c).ToList().Select(Of String)(Function(x) x.Substring(1, x.Length - 2).ToArray())
+        'Try
+        Dim colArray = tfp.ReadLine().Split(","c).ToList().Select(Of String)(Function(x) x.Substring(1, x.Length - 2).ToArray())
             Dim colNames = New Dictionary(Of String, Integer)
-            Dim i = 0
-            For Each col In colArray
+        Dim i = 0
+        Dim j = 0
+        For Each col In colArray
+            If colNames.Keys.Contains(col) Then
+                j = j + 1
+                colNames.Add(col & "_" & j, i)
+            Else
                 colNames.Add(col, i)
-                i = i + 1
-            Next
-            While tfp.EndOfData = False
+            End If
+            i = i + 1
+        Next
+        While tfp.EndOfData = False
                 Dim fields = tfp.ReadFields()
                 symbol = fields(colNames("Symbol"))
                 result.Add(symbol)
             End While
-        Catch ex As Exception
-            Throw New Exception("Error loading file: " & displayFileName & " " & ex.Message)
-        End Try
+        'Catch ex As Exception
+        'Throw New Exception("Error loading file: " & displayFileName & " " & ex.Message)
+        'End Try
         Return result
     End Function
 End Module

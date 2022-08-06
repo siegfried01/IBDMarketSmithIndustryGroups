@@ -6,6 +6,14 @@ Imports CsvHelper
 Imports CsvHelper.Configuration
 Imports Microsoft.VisualBasic.FileIO
 
+Public Class MissingFile
+    Inherits System.Exception
+    Public Property FileName As String
+    Public Sub New(fileName As String)
+        MyBase.New("File not found: " & fileName)
+        Me.FileName = fileName
+    End Sub
+End Class
 Public Class IndustryGroupstToEquity
 
     ' static function to cvs file

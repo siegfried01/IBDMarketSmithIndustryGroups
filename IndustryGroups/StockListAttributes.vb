@@ -1,6 +1,6 @@
 ﻿Public Class StockListAttributes
     Public Property Annotation As String = ""
-    Public Property ColumnPosition As Integer = -1
+    Public Property ExcelColumn As Integer = -1
     Public Property ExcelStyle As String = ""
     Public Property DisplayName() As String = ""
     Public Property CsvFileFoundAndLoaded() As Boolean = False

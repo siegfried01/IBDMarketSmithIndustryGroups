@@ -385,16 +385,22 @@ Module MarketSmithIndustryGroupsMainProgram
 
 
     Sub Main(args As String())
-        Try
-            Main2()
-        Catch exception As Exception
-            WriteLine($"{exception.Message}")
-            WriteLine($"Press any key to continue...")
+        Dim catchExceptions As Boolean = False
+        If catchExceptions Then
             Try
-                ReadKey()
-            Catch ex As Exception
+                Main2()
+            Catch Exception As Exception
+                WriteLine($"{Exception.Message}")
+                WriteLine($"Press any key to continue...")
+                Try
+                    ReadKey()
+                Catch ex As Exception
+                End Try
             End Try
-        End Try
+        Else
+            Main2()
+        End If
+
 
     End Sub
 
@@ -408,30 +414,30 @@ Module MarketSmithIndustryGroupsMainProgram
         Dim ig = IndustryGroupstToEquity.LoadTable($"%USERPROFILE%\Downloads\{mostIndustryGroups}")
 
         Dim fileNameFavoritesList() As StockList = {
-            New StockList With {.Name = "Extended Stocks", .Attributes = New StockListAttributes With {.Annotation = "X", .ColumnPosition = 13}},
-            New StockList With {.Name = "RS Line New High", .Attributes = New StockListAttributes With {.Annotation = "H", .ColumnPosition = 14}},
-            New StockList With {.Name = "IBD Live Ready", .Attributes = New StockListAttributes With {.Annotation = "R", .ColumnPosition = 15}},
-            New StockList With {.Name = "IBD Live Watch", .Attributes = New StockListAttributes With {.Annotation = "W", .ColumnPosition = 16}},
-            New StockList With {.Name = "Long Term Leaders", .Attributes = New StockListAttributes With {.Annotation = "L", .ColumnPosition = 17}},
-            New StockList With {.Name = "RS Line Blue Dot", .Attributes = New StockListAttributes With {.Annotation = "B", .ColumnPosition = 18}},
-            New StockList With {.Name = "IBD 50 Index", .Attributes = New StockListAttributes With {.Annotation = "5", .ColumnPosition = 19}},
-            New StockList With {.Name = "IBD Big Cap 20", .Attributes = New StockListAttributes With {.Annotation = "2", .ColumnPosition = 20}},
-            New StockList With {.Name = "Top 30 EPS Rating Stocks with High Avg. Volume", .Attributes = New StockListAttributes With {.Annotation = "V", .ColumnPosition = 21}},
-            New StockList With {.Name = "Additions", .Attributes = New StockListAttributes With {.Annotation = "A", .ColumnPosition = 22}},
-            New StockList With {.Name = "Deletions", .Attributes = New StockListAttributes With {.Annotation = "D", .ColumnPosition = 23}},
-            New StockList With {.Name = "Large Cap", .Attributes = New StockListAttributes With {.Annotation = "l", .ColumnPosition = 24}},
-            New StockList With {.Name = "Mid Cap", .Attributes = New StockListAttributes With {.Annotation = "m", .ColumnPosition = 25}},
-            New StockList With {.Name = "Small Cap", .Attributes = New StockListAttributes With {.Annotation = "s", .ColumnPosition = 26}}
+            New StockList With {.Name = "Extended Stocks", .Attributes = New StockListAttributes With {.Annotation = "X", .ExcelColumn = 13}},
+            New StockList With {.Name = "RS Line New High", .Attributes = New StockListAttributes With {.Annotation = "H", .ExcelColumn = 14}},
+            New StockList With {.Name = "IBD Live Ready", .Attributes = New StockListAttributes With {.Annotation = "R", .ExcelColumn = 15}},
+            New StockList With {.Name = "IBD Live Watch", .Attributes = New StockListAttributes With {.Annotation = "W", .ExcelColumn = 16}},
+            New StockList With {.Name = "Long Term Leaders", .Attributes = New StockListAttributes With {.Annotation = "L", .ExcelColumn = 17}},
+            New StockList With {.Name = "RS Line Blue Dot", .Attributes = New StockListAttributes With {.Annotation = "B", .ExcelColumn = 18}},
+            New StockList With {.Name = "IBD 50 Index", .Attributes = New StockListAttributes With {.Annotation = "5", .ExcelColumn = 19}},
+            New StockList With {.Name = "IBD Big Cap 20", .Attributes = New StockListAttributes With {.Annotation = "2", .ExcelColumn = 20}},
+            New StockList With {.Name = "Top 30 EPS Rating Stocks with High Avg. Volume", .Attributes = New StockListAttributes With {.Annotation = "V", .ExcelColumn = 21, .DisplayName = "Top 30 EPS Hi Avg Volume"}},
+            New StockList With {.Name = "Additions", .Attributes = New StockListAttributes With {.Annotation = "A", .ExcelColumn = 22}},
+            New StockList With {.Name = "Deletions", .Attributes = New StockListAttributes With {.Annotation = "D", .ExcelColumn = 23}},
+            New StockList With {.Name = "Large Cap", .Attributes = New StockListAttributes With {.Annotation = "l", .ExcelColumn = 24}},
+            New StockList With {.Name = "Mid Cap", .Attributes = New StockListAttributes With {.Annotation = "m", .ExcelColumn = 25}},
+            New StockList With {.Name = "Small Cap", .Attributes = New StockListAttributes With {.Annotation = "s", .ExcelColumn = 26}}
         }
 
         ' Stocks in Favorite Lists have a custom single character identifier that appears as a suffix for the ticker symbol and in the column header in parentheses.
-        Dim fileNameFavoritesMap = New SortedDictionary(Of String, (tickerSymbolAnnotation As String, excelColumn As Int16))
+        Dim fileNameFavoritesMap = New SortedDictionary(Of String, StockListAttributes)
 
         For Each s In fileNameFavoritesList
-            fileNameFavoritesMap(s.Name) = (s.Attributes.Annotation, s.Attributes.ColumnPosition)
+            fileNameFavoritesMap(s.Name) = s.Attributes
         Next
 
-        Dim nextColumn = fileNameFavoritesMap("Small Cap").excelColumn + 1
+        Dim nextColumn = fileNameFavoritesMap("Small Cap").ExcelColumn + 1
 
 
         For Each fileName In fileNameFavoritesMap.Keys
@@ -467,8 +473,14 @@ Module MarketSmithIndustryGroupsMainProgram
         AddTopMembersExcelColumnHeaders(TopMemberCount, ss, industryGroupRows)
 
         For Each name In fileNameFavoritesMap.Keys
-            marketSmithLists(name) = LoadListFromCsv.LoadListFromCsv("%USERPROFILE%\Downloads\" & name & ".csv")
-            marketSmithListColumnNames(fileNameFavoritesMap(name).excelColumn) = name
+            Try
+                marketSmithLists(name) = LoadListFromCsv.LoadListFromCsv("%USERPROFILE%\Downloads\" & name & ".csv")
+                fileNameFavoritesMap(name).CsvFileFoundAndLoaded = True
+                marketSmithListColumnNames(fileNameFavoritesMap(name).ExcelColumn) = name
+            Catch ex As MissingFile
+                fileNameFavoritesMap(name).CsvFileFoundAndLoaded = False
+                WriteLine("Favorite Market Smith List """ & name & """ is missing")
+            End Try
             ' add XML column headers here
         Next
 
@@ -532,6 +544,8 @@ Module MarketSmithIndustryGroupsMainProgram
                     stocksInCurrentIndustryGroup.Sort(Function(a As Equity, b As Equity)
                                                           Return b.Composite.CompareTo(a.Composite) ' sort descending order by composite rating
                                                       End Function)
+                    Dim c = marketSmithListColumnNames.Keys.Count
+                    ' add counts of stocks in current list
                     For Each idx In marketSmithListColumnNames.Keys
                         Dim marketSmithColumnName = marketSmithListColumnNames(idx)
                         Dim marketSmithList = marketSmithLists(marketSmithColumnName)
@@ -543,14 +557,15 @@ Module MarketSmithIndustryGroupsMainProgram
                         Next
                         Dim max = MarketSmithListMax(marketSmithColumnName)
                         If max = count2 And max > 0 Then
-                            WriteLine($"count2={count2} is max (={max})--------------------------------------------")
-                            row.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", "s71"), New XElement(ss + "Data", New XAttribute(ss + "Type", "Number"), count2), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
+                            'WriteLine($"count2={count2} is max (={max})--------------------------------------------")
+                            row.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", "s71"), New XElement(ss + "Data", New XAttribute(ss + "Type", "Number"), count2), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase")))) ' this is the maximum for this column (stock list)
                         Else
-                            WriteLine($"Not a maximum : count2={count2} max = {max}")
+                            'WriteLine($"Not a maximum : count2={count2} max = {max}")
                             row.Add(New XElement(ss + "Cell", New XElement(ss + "Data", New XAttribute(ss + "Type", "Number"), count2), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
                         End If
                     Next
 
+                    ' add ticker symbol links for top stocks in current industry group
                     Dim count = 0
                     For Each stock In stocksInCurrentIndustryGroup
                         'Write($" e={e} {count}/{stocksInCurrentIndustryGroup.Count}")
@@ -558,14 +573,18 @@ Module MarketSmithIndustryGroupsMainProgram
                             Dim annotations = ""
                             Dim annoCount = 0
                             For Each name In fileNameFavoritesMap.Keys
-                                Dim list = marketSmithLists(name)
-                                Dim newAnnotation = fileNameFavoritesMap(name).tickerSymbolAnnotation
-                                If newAnnotation <> "" And list.Contains(stock.TickerSymbol) Then
-                                    If annoCount = 0 Then
-                                        annotations = "-"
+                                If marketSmithLists.ContainsKey(name) Then
+                                    Dim list = marketSmithLists(name)
+                                    Dim newAnnotation = fileNameFavoritesMap(name).Annotation
+                                    If newAnnotation <> "" And list.Contains(stock.TickerSymbol) Then
+                                        If annoCount = 0 Then
+                                            annotations = "-"
+                                        End If
+                                        annotations = annotations & newAnnotation
+                                        annoCount += 1
                                     End If
-                                    annotations = annotations & newAnnotation
-                                    annoCount += 1
+                                Else
+                                    ' fileNameFavoritesMap.Reverse(name)
                                 End If
                             Next
                             Dim hrefStyle As String
@@ -603,15 +622,15 @@ Module MarketSmithIndustryGroupsMainProgram
         'Dim result = Shell(excel & " " & outputFileName, AppWinStyle.NormalFocus, True)
     End Sub
 
-    Private Sub AddStockListExcelColumnHeaders(ByRef additionalNonFavoriteFiles As HashSet(Of String), ByRef fileNameFavoritesList() As StockList, ByRef fileNameFavoritesMap As SortedDictionary(Of String, (tickerSymbolAnnotation As String, excelColumn As Short)), nextColumn As Integer, ss As XNamespace, ByRef industryGroupRows As IEnumerable(Of XElement))
+    Private Sub AddStockListExcelColumnHeaders(ByRef additionalNonFavoriteFiles As HashSet(Of String), ByRef fileNameFavoritesList() As StockList, ByRef fileNameFavoritesMap As SortedDictionary(Of String, StockListAttributes), ByRef nextColumn As Integer, ss As XNamespace, ByRef industryGroupRows As IEnumerable(Of XElement))
         Dim headerRow = industryGroupRows.First()
         AddExcelColumnHeadersForFavoriteStockLists(fileNameFavoritesList, fileNameFavoritesMap, ss, headerRow)
         Dim addedColumns = AddRemainingExcelColumnHeaders(additionalNonFavoriteFiles, ss, industryGroupRows, fileNameFavoritesMap, fileNameFavoritesList, nextColumn, headerRow) ' load the non-favorite ones second
     End Sub
 
-    Private Sub AddExcelColumnHeadersForFavoriteStockLists(fileNameFavoritesList() As StockList, fileNameFavoritesMap As SortedDictionary(Of String, (tickerSymbolAnnotation As String, excelColumn As Short)), ss As XNamespace, headerRow As XElement)
+    Private Sub AddExcelColumnHeadersForFavoriteStockLists(fileNameFavoritesList() As StockList, fileNameFavoritesMap As SortedDictionary(Of String, StockListAttributes), ss As XNamespace, headerRow As XElement)
         For Each stockList In fileNameFavoritesList
-            headerRow.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", "s66"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), stockList.Name & " (" & fileNameFavoritesMap(stockList.Name).Item1 & ")"), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
+            headerRow.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", "s66"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), stockList.Name & " (" & fileNameFavoritesMap(stockList.Name).Annotation & ")"), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
         Next
     End Sub
 
@@ -658,7 +677,7 @@ Module MarketSmithIndustryGroupsMainProgram
         Return marketSmithByIndustryGroupOfCount
     End Function
 
-    Function AddRemainingExcelColumnHeaders(ByRef fileNameList As IEnumerable(Of String), ss As XNamespace, ByRef industryGroupRows As IEnumerable(Of XElement), ByRef fileNameFavoritesMap As SortedDictionary(Of String, (String, Int16)), ByRef fileNameFavoritesList() As StockList, count As Int16, headerRow As XElement) As Int16
+    Function AddRemainingExcelColumnHeaders(ByRef fileNameList As IEnumerable(Of String), ss As XNamespace, ByRef industryGroupRows As IEnumerable(Of XElement), ByRef fileNameFavoritesMap As SortedDictionary(Of String, StockListAttributes), ByRef fileNameFavoritesList() As StockList, ByRef nextColumn As Int16, headerRow As XElement) As Int16
         Dim additionalColumns = 0
         For Each fileName In fileNameList
             If fileName.EndsWith(".csv") Then
@@ -668,8 +687,8 @@ Module MarketSmithIndustryGroupsMainProgram
                 'headerRow.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", "s66"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), fileName & " (" & fileNameFavoritesMap(fileName).Item1 & ")"), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
             Else
                 headerRow.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", "s66"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), fileName), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
-                fileNameFavoritesMap.Add(fileName, ("", count)) ' add non-favorite to map consequetively
-                count += 1
+                fileNameFavoritesMap.Add(fileName, New StockListAttributes With {.ExcelColumn = nextColumn, .DisplayName = ""}) ' add non-favorite to map consequetively
+                nextColumn += 1
                 additionalColumns += 1
             End If
         Next
