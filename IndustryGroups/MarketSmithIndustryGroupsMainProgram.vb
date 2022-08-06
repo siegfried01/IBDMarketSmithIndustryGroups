@@ -405,7 +405,8 @@ Module MarketSmithIndustryGroupsMainProgram
     End Sub
 
     Private Sub Main2()
-        Dim TopMemberCount = 19
+        Dim topMemberCount = 19 ' top N members of stocklist to show
+        Dim currentExcelColumn = 13
         Dim filesAlreadyLoaded = New HashSet(Of String)
         Dim additionalNonFavoriteFiles = New HashSet(Of String)
         Dim mostIndustryGroups = "MinDollarVol20MComp80.csv"
@@ -413,7 +414,7 @@ Module MarketSmithIndustryGroupsMainProgram
         filesAlreadyLoaded.Add("197 Industry Groups.csv")
         Dim ig = IndustryGroupstToEquity.LoadTable($"%USERPROFILE%\Downloads\{mostIndustryGroups}")
 
-        Dim fileNameFavoritesList() As StockList = {
+        Dim fileNameFavoritesList = New List(Of StockList) From {
             New StockList With {.Name = "Extended Stocks", .Attributes = New StockListAttributes With {.Annotation = "X", .ExcelColumn = 13}},
             New StockList With {.Name = "RS Line New High", .Attributes = New StockListAttributes With {.Annotation = "H", .ExcelColumn = 14}},
             New StockList With {.Name = "IBD Live Ready", .Attributes = New StockListAttributes With {.Annotation = "R", .ExcelColumn = 15}},
@@ -436,15 +437,19 @@ Module MarketSmithIndustryGroupsMainProgram
             New StockList With {.Name = "Small Cap", .Attributes = New StockListAttributes With {.Annotation = "s", .ExcelColumn = 32}}
         }
 
+        For Each stockList In fileNameFavoritesList
+            stockList.Attributes.ExcelColumn = currentExcelColumn
+            currentExcelColumn += 1
+        Next
+
+        'SaveToXML(fileNameFavoritesList)
+
         ' Stocks in Favorite Lists have a custom single character identifier that appears as a suffix for the ticker symbol and in the column header in parentheses.
         Dim fileNameFavoritesMap = New SortedDictionary(Of String, StockListAttributes)
 
         For Each s In fileNameFavoritesList
             fileNameFavoritesMap(s.Name) = s.Attributes
         Next
-
-        Dim nextColumn = fileNameFavoritesMap("Small Cap").ExcelColumn + 1 ' there has got to be a better way to get the last element in the list!
-
 
         For Each fileName In fileNameFavoritesMap.Keys
             If filesAlreadyLoaded.Contains(fileName) Then Continue For
@@ -469,8 +474,8 @@ Module MarketSmithIndustryGroupsMainProgram
         nsMgr.AddNamespace("html", "http://www.w3.org/TR/REC-html40")
         Dim ss As XNamespace = "urn:schemas-microsoft-com:office:spreadsheet"
         Dim x As XNamespace = "urn:schemas-microsoft-com:office:excel"
-        AdjustIndustryGroupTableColumnCount(TopMemberCount + additionalNonFavoriteFiles.Count, nsMgr, ss)
-        AdjustWorksheetColumnCount(TopMemberCount + additionalNonFavoriteFiles.Count, nsMgr, ss)
+        AdjustIndustryGroupTableColumnCount(topMemberCount + additionalNonFavoriteFiles.Count, nsMgr, ss)
+        AdjustWorksheetColumnCount(topMemberCount + additionalNonFavoriteFiles.Count, nsMgr, ss)
         Dim industryGroupRows As IEnumerable(Of XElement) = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table/ss:Row", nsMgr)
         'Dim filterDimensions = industryGroups.XPathEvaluate("ss:Workbook/ss:Worksheet/ss:Names/ss:NamedRange/@ss:RefersTo", nsMgr)
 
@@ -487,7 +492,7 @@ Module MarketSmithIndustryGroupsMainProgram
             ' add XML column headers here
         Next
 
-        AddStockListExcelColumnHeaders(additionalNonFavoriteFiles, fileNameFavoritesList, fileNameFavoritesMap, nextColumn, ss, industryGroupRows)        'fileNameFavoritesMap now containes all the files that were loaded and the column positions for both the favorite and non-favorite files.
+        AddStockListExcelColumnHeaders(additionalNonFavoriteFiles, fileNameFavoritesList, fileNameFavoritesMap, currentExcelColumn, ss, industryGroupRows)        'fileNameFavoritesMap now containes all the files that were loaded and the column positions for both the favorite and non-favorite files.
 
         For Each name In fileNameFavoritesMap.Keys
             If marketSmithLists.ContainsKey(name) Then
@@ -507,7 +512,7 @@ Module MarketSmithIndustryGroupsMainProgram
             End If
         Next
 
-        AddTopMembersExcelColumnHeaders(TopMemberCount, ss, industryGroupRows)
+        AddTopMembersExcelColumnHeaders(topMemberCount, ss, industryGroupRows)
 
         ' compute maximum values for each column for highlighting later
         Dim marketSmithByIndustryGroupOfCount As AutoAddDictionary(Of String, AutoAddDictionary(Of String, Int32)) = IndustryGroupMarketSmithListFindMinMax(ig, marketSmithListColumnNames, marketSmithLists, nsMgr, industryGroupRows)
@@ -594,7 +599,7 @@ Module MarketSmithIndustryGroupsMainProgram
                     Dim count = 0
                     For Each stock In stocksInCurrentIndustryGroup
                         'Write($" e={e} {count}/{stocksInCurrentIndustryGroup.Count}")
-                        If count < TopMemberCount Then
+                        If count < topMemberCount Then
                             Dim annotations = ""
                             Dim annoCount = 0
                             For Each name In fileNameFavoritesMap.Keys
@@ -647,13 +652,21 @@ Module MarketSmithIndustryGroupsMainProgram
         'Dim result = Shell(excel & " " & outputFileName, AppWinStyle.NormalFocus, True)
     End Sub
 
-    Private Sub AddStockListExcelColumnHeaders(ByRef additionalNonFavoriteFiles As HashSet(Of String), ByRef fileNameFavoritesList() As StockList, ByRef fileNameFavoritesMap As SortedDictionary(Of String, StockListAttributes), ByRef nextColumn As Integer, ss As XNamespace, ByRef industryGroupRows As IEnumerable(Of XElement))
+    Private Sub SaveToXML(fileNameFavoritesList As List(Of StockList))
+        Dim xmlSerializer As System.Xml.Serialization.XmlSerializer = New System.Xml.Serialization.XmlSerializer(fileNameFavoritesList.GetType)
+        Dim string_writer As New System.IO.StringWriter
+        Dim ns As New System.Xml.Serialization.XmlSerializerNamespaces
+        xmlSerializer.Serialize(string_writer, fileNameFavoritesList, ns)
+        System.IO.File.WriteAllText(System.Environment.ExpandEnvironmentVariables($"%USERPROFILE%\Downloads\MarketSmithFavoriteStockLists.xml"), string_writer.ToString)
+    End Sub
+
+    Private Sub AddStockListExcelColumnHeaders(ByRef additionalNonFavoriteFiles As HashSet(Of String), ByRef fileNameFavoritesList As List(Of StockList), ByRef fileNameFavoritesMap As SortedDictionary(Of String, StockListAttributes), ByRef nextColumn As Integer, ss As XNamespace, ByRef industryGroupRows As IEnumerable(Of XElement))
         Dim headerRow = industryGroupRows.First()
         AddExcelColumnHeadersForFavoriteStockLists(fileNameFavoritesList, fileNameFavoritesMap, ss, headerRow)
         Dim addedColumns = AddRemainingExcelColumnHeaders(additionalNonFavoriteFiles, ss, industryGroupRows, fileNameFavoritesMap, fileNameFavoritesList, nextColumn, headerRow) ' load the non-favorite ones second
     End Sub
 
-    Private Sub AddExcelColumnHeadersForFavoriteStockLists(fileNameFavoritesList() As StockList, fileNameFavoritesMap As SortedDictionary(Of String, StockListAttributes), ss As XNamespace, headerRow As XElement)
+    Private Sub AddExcelColumnHeadersForFavoriteStockLists(fileNameFavoritesList As List(Of StockList), fileNameFavoritesMap As SortedDictionary(Of String, StockListAttributes), ss As XNamespace, headerRow As XElement)
         For Each stockList In fileNameFavoritesList
             If fileNameFavoritesMap.ContainsKey((stockList.Name)) Then
                 If fileNameFavoritesMap(stockList.Name).CsvFileFoundAndLoaded Then
@@ -714,7 +727,7 @@ Module MarketSmithIndustryGroupsMainProgram
         Return marketSmithByIndustryGroupOfCount
     End Function
 
-    Function AddRemainingExcelColumnHeaders(ByRef fileNameList As IEnumerable(Of String), ss As XNamespace, ByRef industryGroupRows As IEnumerable(Of XElement), ByRef fileNameFavoritesMap As SortedDictionary(Of String, StockListAttributes), ByRef fileNameFavoritesList() As StockList, ByRef nextColumn As Int16, headerRow As XElement) As Int16
+    Function AddRemainingExcelColumnHeaders(ByRef fileNameList As IEnumerable(Of String), ss As XNamespace, ByRef industryGroupRows As IEnumerable(Of XElement), ByRef fileNameFavoritesMap As SortedDictionary(Of String, StockListAttributes), ByRef fileNameFavoritesList As List(Of StockList), ByRef nextColumn As Int16, headerRow As XElement) As Int16
         Dim additionalColumns = 0
         For Each fileName In fileNameList
             If fileName.EndsWith(".csv") Then
