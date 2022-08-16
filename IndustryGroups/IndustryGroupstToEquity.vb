@@ -49,6 +49,7 @@ Public Class IndustryGroupstToEquity
             Dim ad = fields(colNames("A/D Rating"))
             Dim yield = Double.Parse(fields(colNames("Yield %")), CultureInfo.InvariantCulture)
             Dim eps = ParseField(colNames, fields, "EPS Rating") 'Double.Parse(fields(colNames("EPS Rating")), CultureInfo.InvariantCulture)
+            'Dim upDown = ParseField(colNames, fields, "UpDown")
             Dim eq = New Equity()
             eq.TickerSymbol = symbol
             eq.Composite = compRating
@@ -58,6 +59,8 @@ Public Class IndustryGroupstToEquity
             eq.SMR = smr
             eq.Yield = yield
             eq.EPS = eps
+            eq.AD = ad
+            'eq.UpDown
             If result.ContainsKey(name) Then
                 result(name).Add(eq)
             Else

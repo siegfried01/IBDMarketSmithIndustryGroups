@@ -409,7 +409,8 @@ Module MarketSmithIndustryGroupsMainProgram
         Dim currentExcelColumn = 13
         Dim filesAlreadyLoaded = New HashSet(Of String)
         Dim additionalNonFavoriteFiles = New HashSet(Of String)
-        Dim mostIndustryGroups = "MinDollarVol1MMinPrice5.csv"   '"MinDollarVol20MComp80.csv"
+        Dim mostIndustryGroups = "MinDollarVol1MMinPrice5.csv"
+        'mostIndustryGroups = "MinDollarVol20MComp80.csv"
         filesAlreadyLoaded.Add(mostIndustryGroups)
         filesAlreadyLoaded.Add("197 Industry Groups.csv")
         Dim ig = IndustryGroupstToEquity.LoadTable($"%USERPROFILE%\Downloads\{mostIndustryGroups}")
@@ -425,8 +426,8 @@ Module MarketSmithIndustryGroupsMainProgram
             New StockList With {.Name = "IBD Big Cap 20", .Attributes = New StockListAttributes With {.Annotation = "2", .ExcelColumn = 20}},
             New StockList With {.Name = "Top 30 EPS Rating Stocks with High Avg. Volume", .Attributes = New StockListAttributes With {.Annotation = "V", .ExcelColumn = 21, .DisplayName = "Top 30 EPS Hi Avg Volume"}},
             New StockList With {.Name = "Top 30 RS Rating Stocks with High Avg. Volume", .Attributes = New StockListAttributes With {.Annotation = "v", .ExcelColumn = 21, .DisplayName = "Top 30 RS Hi Avg Volume"}},
-            New StockList With {.Name = "Additions", .Attributes = New StockListAttributes With {.Annotation = "A", .ExcelColumn = 22}},
-            New StockList With {.Name = "Deletions", .Attributes = New StockListAttributes With {.Annotation = "D", .ExcelColumn = 23}},
+            New StockList With {.Name = "Additions", .Attributes = New StockListAttributes With {.Annotation = "A", .ExcelColumn = 22, .DisplayName = "Growth 250 Additions"}},
+            New StockList With {.Name = "Deletions", .Attributes = New StockListAttributes With {.Annotation = "D", .ExcelColumn = 23, .DisplayName = "Growth 250 Deletions"}},
             New StockList With {.Name = "James P. O'Shaughnessy", .Attributes = New StockListAttributes With {.ExcelColumn = 24}},
             New StockList With {.Name = "Martin Zweig", .Attributes = New StockListAttributes With {.ExcelColumn = 25}},
             New StockList With {.Name = "Peter Lynch", .Attributes = New StockListAttributes With {.ExcelColumn = 26}},
@@ -478,6 +479,8 @@ Module MarketSmithIndustryGroupsMainProgram
         AdjustIndustryGroupTableColumnCount(topMemberCount + additionalNonFavoriteFiles.Count, nsMgr, ss)
         AdjustWorksheetColumnCount(topMemberCount + additionalNonFavoriteFiles.Count, nsMgr, ss)
         Dim industryGroupRows As IEnumerable(Of XElement) = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table/ss:Row", nsMgr)
+        Dim styles As XElement = industryGroups.XPathSelectElement("ss:Workbook/ss:Styles", nsMgr)
+        Dim styleNames As HashSet(Of String) = New HashSet(Of String)
         'Dim filterDimensions = industryGroups.XPathEvaluate("ss:Workbook/ss:Worksheet/ss:Names/ss:NamedRange/@ss:RefersTo", nsMgr)
 
 
@@ -600,7 +603,7 @@ Module MarketSmithIndustryGroupsMainProgram
                     Dim count = 0
                     For Each stock In stocksInCurrentIndustryGroup
                         'Write($" e={e} {count}/{stocksInCurrentIndustryGroup.Count}")
-                        If count < topMemberCount Then
+                        If count <= topMemberCount Then
                             Dim annotations = ""
                             Dim annoCount = 0
                             For Each name In fileNameFavoritesMap.Keys
@@ -624,7 +627,29 @@ Module MarketSmithIndustryGroupsMainProgram
                             Else
                                 hrefStyle = hrefStyleNormal
                             End If
-                            row.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", hrefStyle), New XAttribute(ss + "HRef", $"https://marketsmith.investors.com/mstool?Symbol={stock.TickerSymbol}&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"), New XAttribute(x + "HRefScreenTip", "comp=" & stock.Composite & " RS=" & stock.RS & " SMR=" & stock.SMR & " $vol=" & stock.DollarVolume & " EPS=" & stock.EPS), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), stock.TickerSymbol & annotations), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"), industryGroupName)))
+                            Dim style = New ExcelStyle()
+                            style.Hue = Convert.ToInt32(stock.Composite + 0.5)
+                            If annotations.Contains("X") Then style.Font = 1
+                            If stock.DollarVolume > 20 * 1000 Then
+                                style.Shade = 0
+                            ElseIf stock.DollarVolume > 15 * 1000 Then
+                                style.Shade = 1
+                            ElseIf stock.DollarVolume > 10 * 1000 Then
+                                style.Shade = 2
+                            ElseIf stock.DollarVolume > 5 * 1000 Then
+                                style.Shade = 3
+                            Else
+                                style.Shade = 4
+                            End If
+                            If styleNames.Contains(style.ToString()) Then
+                            Else
+                                styleNames.Add(style.ToString())
+                                Dim border As XElement() = {New XElement(ss + "Border", New XAttribute(ss + "Position", "Bottom"), New XAttribute(ss + "LineStyle", "Continuous"), New XAttribute(ss + "Weight", "1")), New XElement(ss + "Border", New XAttribute(ss + "Position", "Left"), New XAttribute(ss + "LineStyle", "Continuous"), New XAttribute(ss + "Weight", "1")), New XElement(ss + "Border", New XAttribute(ss + "Position", "Right"), New XAttribute(ss + "LineStyle", "Continuous"), New XAttribute(ss + "Weight", "1")), New XElement(ss + "Border", New XAttribute(ss + "Position", "Top"), New XAttribute(ss + "LineStyle", "Continuous"), New XAttribute(ss + "Weight", "1"))}
+                                Dim pattern As XAttribute() = {New XAttribute(ss + "Pattern", "Solid"), New XAttribute(ss + "Pattern", "Gray0625"), New XAttribute(ss + "Pattern", "ThinHorzStripe"), New XAttribute(ss + "Pattern", "ThinVertStripe"), New XAttribute(ss + "Pattern", "ThinVertStripe"), New XAttribute(ss + "Pattern", "HorzStripe"), New XAttribute(ss + "Pattern", "VertStripe")}
+                                styles.Add(New XElement(ss + "Style", New XAttribute(ss + "ID", style.ToString()), New XElement(ss + "Borders", border(0), border(1), border(2), border(3)), New XElement(ss + "Interior", New XAttribute(ss + "Color", "#" & style.Color), pattern(style.Shade))))
+                            End If
+                            hrefStyle = style.ToString()
+                            row.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", hrefStyle), New XAttribute(ss + "HRef", $"https://marketsmith.investors.com/mstool?Symbol={stock.TickerSymbol}&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"), New XAttribute(x + "HRefScreenTip", stock.TickerSymbol & ": " & "comp=" & stock.Composite & " RS=" & stock.RS & " SMR=" & stock.SMR & " $vol=" & stock.DollarVolume & " EPS=" & stock.EPS), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), stock.TickerSymbol & annotations), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"), industryGroupName)))
                         Else
                             Exit For
                         End If
