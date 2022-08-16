@@ -9,5 +9,6 @@
     Public Property UpDown As Double
     Public Property DollarVolume As Double
     Public Property RS As Double
+    Public Property Name As String
 
 End Class

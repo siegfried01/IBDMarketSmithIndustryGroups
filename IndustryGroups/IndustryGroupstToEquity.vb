@@ -22,7 +22,7 @@ Public Class IndustryGroupstToEquity
         fileName = Environment.ExpandEnvironmentVariables(fileName)
         IsFileTooOld(fileName, 4, displayFileName)
         Dim result = New Dictionary(Of String, List(Of Equity))
-        Dim name As String
+        Dim industryName As String
         Dim symbol As String
         Dim compRating As Double
 
@@ -39,7 +39,7 @@ Public Class IndustryGroupstToEquity
         Next
         While tfp.EndOfData = False
             Dim fields = tfp.ReadFields()
-            name = fields(colNames("Industry Name"))
+            industryName = fields(colNames("Industry Name"))
             symbol = fields(colNames("Symbol"))
             compRating = ParseField(colNames, fields, "Comp Rating")
             Dim price = Double.Parse(fields(colNames("Current Price")), CultureInfo.InvariantCulture)
@@ -49,6 +49,8 @@ Public Class IndustryGroupstToEquity
             Dim ad = fields(colNames("A/D Rating"))
             Dim yield = Double.Parse(fields(colNames("Yield %")), CultureInfo.InvariantCulture)
             Dim eps = ParseField(colNames, fields, "EPS Rating") 'Double.Parse(fields(colNames("EPS Rating")), CultureInfo.InvariantCulture)
+            Dim upDown = ParseField(colNames, fields, "Up/Down Vol")
+            Dim name = fields(colNames("Name"))
             Dim eq = New Equity()
             eq.TickerSymbol = symbol
             eq.Composite = compRating
@@ -58,10 +60,13 @@ Public Class IndustryGroupstToEquity
             eq.SMR = smr
             eq.Yield = yield
             eq.EPS = eps
-            If result.ContainsKey(name) Then
-                result(name).Add(eq)
+            eq.AD = ad
+            eq.UpDown = upDown
+            eq.Name = name
+            If result.ContainsKey(industryName) Then
+                result(industryName).Add(eq)
             Else
-                result.Add(name, New List(Of Equity) From {eq})
+                result.Add(industryName, New List(Of Equity) From {eq})
             End If
         End While
         Return result
