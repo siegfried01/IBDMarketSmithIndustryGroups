@@ -41,14 +41,14 @@ Public Class IndustryGroupstToEquity
             Dim fields = tfp.ReadFields()
             name = fields(colNames("Industry Name"))
             symbol = fields(colNames("Symbol"))
-            compRating = Double.Parse(fields(colNames("Comp Rating")), CultureInfo.InvariantCulture)
+            compRating = ParseField(colNames, fields, "Comp Rating")
             Dim price = Double.Parse(fields(colNames("Current Price")), CultureInfo.InvariantCulture)
             Dim dvol = Double.Parse(fields(colNames("50-Day Avg $ Vol (1000s)")), CultureInfo.InvariantCulture)
-            Dim rs = Double.Parse(fields(colNames("RS Rating")), CultureInfo.InvariantCulture)
+            Dim rs = ParseField(colNames, fields, "RS Rating") 'Double.Parse(fields(colNames("RS Rating")), CultureInfo.InvariantCulture)
             Dim smr = fields(colNames("SMR Rating"))
             Dim ad = fields(colNames("A/D Rating"))
             Dim yield = Double.Parse(fields(colNames("Yield %")), CultureInfo.InvariantCulture)
-            Dim eps = Double.Parse(fields(colNames("EPS Rating")), CultureInfo.InvariantCulture)
+            Dim eps = ParseField(colNames, fields, "EPS Rating") 'Double.Parse(fields(colNames("EPS Rating")), CultureInfo.InvariantCulture)
             Dim eq = New Equity()
             eq.TickerSymbol = symbol
             eq.Composite = compRating
@@ -67,5 +67,13 @@ Public Class IndustryGroupstToEquity
         Return result
     End Function
 
-
+    Private Shared Function ParseField(colNames As Dictionary(Of String, Integer), fields() As String, fieldName As String) As Double
+        Dim ratingValue As Double
+        Dim ratingStr = fields(colNames(fieldName))
+        If String.IsNullOrEmpty(ratingStr) Or ratingStr = "-" Then
+            ratingStr = "0"
+        End If
+        ratingValue = Double.Parse(ratingStr, CultureInfo.InvariantCulture)
+        Return ratingValue
+    End Function
 End Class

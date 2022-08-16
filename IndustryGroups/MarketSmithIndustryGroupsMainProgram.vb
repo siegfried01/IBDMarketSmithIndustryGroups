@@ -409,7 +409,7 @@ Module MarketSmithIndustryGroupsMainProgram
         Dim currentExcelColumn = 13
         Dim filesAlreadyLoaded = New HashSet(Of String)
         Dim additionalNonFavoriteFiles = New HashSet(Of String)
-        Dim mostIndustryGroups = "MinDollarVol20MComp80.csv"
+        Dim mostIndustryGroups = "MinDollarVol1MMinPrice5.csv"   '"MinDollarVol20MComp80.csv"
         filesAlreadyLoaded.Add(mostIndustryGroups)
         filesAlreadyLoaded.Add("197 Industry Groups.csv")
         Dim ig = IndustryGroupstToEquity.LoadTable($"%USERPROFILE%\Downloads\{mostIndustryGroups}")
@@ -424,6 +424,7 @@ Module MarketSmithIndustryGroupsMainProgram
             New StockList With {.Name = "IBD 50 Index", .Attributes = New StockListAttributes With {.Annotation = "5", .ExcelColumn = 19}},
             New StockList With {.Name = "IBD Big Cap 20", .Attributes = New StockListAttributes With {.Annotation = "2", .ExcelColumn = 20}},
             New StockList With {.Name = "Top 30 EPS Rating Stocks with High Avg. Volume", .Attributes = New StockListAttributes With {.Annotation = "V", .ExcelColumn = 21, .DisplayName = "Top 30 EPS Hi Avg Volume"}},
+            New StockList With {.Name = "Top 30 RS Rating Stocks with High Avg. Volume", .Attributes = New StockListAttributes With {.Annotation = "v", .ExcelColumn = 21, .DisplayName = "Top 30 RS Hi Avg Volume"}},
             New StockList With {.Name = "Additions", .Attributes = New StockListAttributes With {.Annotation = "A", .ExcelColumn = 22}},
             New StockList With {.Name = "Deletions", .Attributes = New StockListAttributes With {.Annotation = "D", .ExcelColumn = 23}},
             New StockList With {.Name = "James P. O'Shaughnessy", .Attributes = New StockListAttributes With {.ExcelColumn = 24}},
@@ -674,7 +675,13 @@ Module MarketSmithIndustryGroupsMainProgram
                     If fileNameFavoritesMap(stockList.Name).Annotation <> "" Then
                         annotation = " (" & fileNameFavoritesMap(stockList.Name).Annotation & ")"
                     End If
-                    headerRow.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", "s66"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), stockList.Name & annotation), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
+                    Dim stockListName As String
+                    If String.IsNullOrEmpty(stockList.Attributes.DisplayName) Then
+                        stockListName = stockList.Name
+                    Else
+                        stockListName = stockList.Attributes.DisplayName
+                    End If
+                    headerRow.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", "s66"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), stockListName & annotation), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
                 Else
                     WriteLine($"{stockList.Name} file is missing: skipping this column header")
                 End If
