@@ -1,5 +1,15 @@
 ﻿Public Class ExcelStyle
-    Public Property Hue As Single = 100.0F
+    Private hueValue = 100.0F
+    Public Property Hue As Single
+        Get
+            Return hueValue * HueScale + HueOffset
+        End Get
+        Set(value As Single)
+            hueValue = value
+        End Set
+    End Property
+    Public Property HueScale As Single = 2.3F
+    Public Property HueOffset As Single = 93.3F
     Public Property Saturation As Single = 200.0F
     Public Property Luminesence As Single = 200.0F
     Public Property Font As Int16 = 0
@@ -20,7 +30,7 @@
         End Set
     End Property
 
-    Public Function ToString() As String
+    Public Overrides Function ToString() As String
         Return "s_h" & Hue & "_f" & Font & "_s" & Shade
     End Function
 End Class

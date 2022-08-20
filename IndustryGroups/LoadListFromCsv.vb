@@ -3,7 +3,7 @@ Imports System.Collections.Generic
 Imports Microsoft.VisualBasic.FileIO
 Imports System.Xml
 Imports System.Xml.XPath
-Imports System.Console.WriteLine
+Imports System.Console
 
 Module LoadListFromCsv
     Function LoadIndustryGroups(ByRef industryGroups As XDocument, ByRef groupRows As IEnumerable(Of XElement), ss As XNamespace, hrefStyle As String, Optional fileName As String = "%USERPROFILE%\Downloads\197 Industry Groups.csv") As IEnumerable(Of XElement)

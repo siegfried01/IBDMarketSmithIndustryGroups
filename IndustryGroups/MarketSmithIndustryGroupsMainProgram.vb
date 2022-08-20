@@ -417,28 +417,38 @@ Module MarketSmithIndustryGroupsMainProgram
         Dim ig = IndustryGroupstToEquity.LoadTable($"%USERPROFILE%\Downloads\{mostIndustryGroups}")
 
         Dim fileNameFavoritesList = New List(Of StockList) From {
-            New StockList With {.Name = "Extended Stocks", .Attributes = New StockListAttributes With {.Annotation = "X", .ExcelColumn = 13}},
-            New StockList With {.Name = "RS Line New High", .Attributes = New StockListAttributes With {.Annotation = "H", .ExcelColumn = 14}},
-            New StockList With {.Name = "IBD Live Ready", .Attributes = New StockListAttributes With {.Annotation = "R", .ExcelColumn = 15}},
-            New StockList With {.Name = "IBD Live Watch", .Attributes = New StockListAttributes With {.Annotation = "W", .ExcelColumn = 16}},
-            New StockList With {.Name = "Long Term Leaders", .Attributes = New StockListAttributes With {.Annotation = "L", .ExcelColumn = 17}},
-            New StockList With {.Name = "RS Line Blue Dot", .Attributes = New StockListAttributes With {.Annotation = "B", .ExcelColumn = 18}},
-            New StockList With {.Name = "IBD 50 Index", .Attributes = New StockListAttributes With {.Annotation = "5", .ExcelColumn = 19}},
-            New StockList With {.Name = "IBD Big Cap 20", .Attributes = New StockListAttributes With {.Annotation = "2", .ExcelColumn = 20}},
-            New StockList With {.Name = "Top 30 EPS Rating Stocks with High Avg. Volume", .Attributes = New StockListAttributes With {.Annotation = "V", .ExcelColumn = 21, .DisplayName = "Top 30 EPS Hi Avg Volume"}},
-            New StockList With {.Name = "Top 30 RS Rating Stocks with High Avg. Volume", .Attributes = New StockListAttributes With {.Annotation = "v", .ExcelColumn = 21, .DisplayName = "Top 30 RS Hi Avg Volume"}},
-            New StockList With {.Name = "Up on Volume", .Attributes = New StockListAttributes With {.Annotation = "U", .ExcelColumn = 23}},
-            New StockList With {.Name = "Additions", .Attributes = New StockListAttributes With {.Annotation = "A", .ExcelColumn = 22, .DisplayName = "Growth 250 Additions"}},
-            New StockList With {.Name = "Deletions", .Attributes = New StockListAttributes With {.Annotation = "D", .ExcelColumn = 23, .DisplayName = "Growth 250 Deletions"}},
-            New StockList With {.Name = "James P. O'Shaughnessy", .Attributes = New StockListAttributes With {.ExcelColumn = 24}},
-            New StockList With {.Name = "Martin Zweig", .Attributes = New StockListAttributes With {.ExcelColumn = 25}},
-            New StockList With {.Name = "Peter Lynch", .Attributes = New StockListAttributes With {.ExcelColumn = 26}},
-            New StockList With {.Name = "Benjamin Graham", .Attributes = New StockListAttributes With {.ExcelColumn = 27}},
-            New StockList With {.Name = "Warren Buffett", .Attributes = New StockListAttributes With {.ExcelColumn = 28}},
-            New StockList With {.Name = "William J. O'Neil", .Attributes = New StockListAttributes With {.ExcelColumn = 29}},
-            New StockList With {.Name = "Large Cap", .Attributes = New StockListAttributes With {.Annotation = "l", .ExcelColumn = 30}},
-            New StockList With {.Name = "Mid Cap", .Attributes = New StockListAttributes With {.Annotation = "m", .ExcelColumn = 31}},
-            New StockList With {.Name = "Small Cap", .Attributes = New StockListAttributes With {.Annotation = "s", .ExcelColumn = 32}}
+            New StockList With {.Name = "IBD Live Ready", .Attributes = New StockListAttributes With {.Annotation = "R"}},
+            New StockList With {.Name = "IBD Live Watch", .Attributes = New StockListAttributes With {.Annotation = "W"}},
+            New StockList With {.Name = "Long Term Leaders", .Attributes = New StockListAttributes With {.Annotation = "L"}},
+            New StockList With {.Name = "Long Term Leaders Watch"},
+            New StockList With {.Name = "IBD 50 Index", .Attributes = New StockListAttributes With {.Annotation = "5"}},
+            New StockList With {.Name = "IBD Big Cap 20", .Attributes = New StockListAttributes With {.Annotation = "2"}},
+            New StockList With {.Name = "LB Leaders"},
+            New StockList With {.Name = "LB Watch"},
+            New StockList With {.Name = "LB Spotlight"},
+            New StockList With {.Name = "LB Sector Leaders"},
+            New StockList With {.Name = "LB Top 10"},
+            New StockList With {.Name = "Fundamental Strength", .Attributes = New StockListAttributes With {.Annotation = "F"}},
+            New StockList With {.Name = "Technical Strength", .Attributes = New StockListAttributes With {.Annotation = "T"}},
+            New StockList With {.Name = "Extended Stocks", .Attributes = New StockListAttributes With {.Annotation = "X"}},
+            New StockList With {.Name = "RS Line New High", .Attributes = New StockListAttributes With {.Annotation = "h"}},
+            New StockList With {.Name = "All RS Line New High", .Attributes = New StockListAttributes With {.Annotation = "H"}},
+            New StockList With {.Name = "RS Line Blue Dot", .Attributes = New StockListAttributes With {.Annotation = "B"}},
+            New StockList With {.Name = "RS Line 5% New High", .Attributes = New StockListAttributes With {.Annotation = "%"}},
+            New StockList With {.Name = "Top 30 RS Rating Stocks with High Avg. Volume", .Attributes = New StockListAttributes With {.Annotation = "v", .DisplayName = "Top 30 RS Hi Avg Volume"}},
+            New StockList With {.Name = "Top 30 EPS Rating Stocks with High Avg. Volume", .Attributes = New StockListAttributes With {.Annotation = "V", .DisplayName = "Top 30 EPS Hi Avg Volume"}},
+            New StockList With {.Name = "Up on Volume", .Attributes = New StockListAttributes With {.Annotation = "U"}},
+            New StockList With {.Name = "Additions", .Attributes = New StockListAttributes With {.Annotation = "A", .DisplayName = "Growth 250 Additions"}},
+            New StockList With {.Name = "Deletions", .Attributes = New StockListAttributes With {.Annotation = "D", .DisplayName = "Growth 250 Deletions"}},
+            New StockList With {.Name = "James P. O'Shaughnessy"},
+            New StockList With {.Name = "Martin Zweig"},
+            New StockList With {.Name = "Peter Lynch"},
+            New StockList With {.Name = "Benjamin Graham"},
+            New StockList With {.Name = "Warren Buffett"},
+            New StockList With {.Name = "William J. O'Neil"},
+            New StockList With {.Name = "Large Cap", .Attributes = New StockListAttributes With {.Annotation = "l"}},
+            New StockList With {.Name = "Mid Cap", .Attributes = New StockListAttributes With {.Annotation = "m"}},
+            New StockList With {.Name = "Small Cap", .Attributes = New StockListAttributes With {.Annotation = "s"}}
         }
 
         For Each stockList In fileNameFavoritesList
@@ -460,7 +470,7 @@ Module MarketSmithIndustryGroupsMainProgram
             filesAlreadyLoaded.Add(fileName)
         Next
 
-        For Each fileName In Directory.GetFiles(System.Environment.ExpandEnvironmentVariables("%DN%"), "*.csv")
+        For Each fileName In Directory.GetFiles(System.Environment.ExpandEnvironmentVariables("%USERPROFILE%\Downloads"), "*.csv")
             fileName = Path.GetFileName(fileName)
             If filesAlreadyLoaded.Contains(fileName) Then Continue For
             additionalNonFavoriteFiles.Add(fileName)
@@ -629,29 +639,39 @@ Module MarketSmithIndustryGroupsMainProgram
                             Else
                                 hrefStyle = hrefStyleNormal
                             End If
-                            Dim style = New ExcelStyle()
-                            style.Hue = Convert.ToInt32(stock.Composite + 0.5)
-                            If annotations.Contains("X") Then style.Font = 1
+                            ' x= 40 to 100, y= 0 to 140
+                            ' emacs calc: solve([40*m+b=0, 100*m+b=140],[m,b])==[m = 2.33333333333, b = -93.3333333333]
+                            Dim excelStyle = New ExcelStyle() With {.HueOffset = -93.33F, .HueScale = 2.3333F, .Saturation = 200.0F, .Luminesence = 200.0F}
+                            excelStyle.Hue = Convert.ToInt32(stock.Composite + 0.5)
+                            If annotations.Contains("X") Then excelStyle.Font = 1
                             If stock.DollarVolume > 20 * 1000 Then
-                                style.Shade = 0
+                                excelStyle.Shade = 0
                             ElseIf stock.DollarVolume > 15 * 1000 Then
-                                style.Shade = 1
+                                excelStyle.Shade = 1
                             ElseIf stock.DollarVolume > 10 * 1000 Then
-                                style.Shade = 2
+                                excelStyle.Shade = 2
                             ElseIf stock.DollarVolume > 5 * 1000 Then
-                                style.Shade = 3
+                                excelStyle.Shade = 3
                             Else
-                                style.Shade = 4
+                                excelStyle.Shade = 4
                             End If
-                            If styleNames.Contains(style.ToString()) Then
+                            Dim fonts As XElement() = {New XElement(ss + "Font", New XAttribute(ss + "FontName", "Calibri"), New XAttribute(ss + "Size", 11), New XAttribute(ss + "Bold", 1), New XAttribute(ss + "Color", "#0066CC"), New XAttribute(ss + "Underline", "Single")), New XElement(ss + "Font", New XAttribute(ss + "FontName", "Calibri"), New XAttribute(ss + "Size", 11), New XAttribute(ss + "Bold", 1), New XAttribute(ss + "Color", "#0066CC"), New XAttribute(ss + "Underline", "Single"), New XAttribute(ss + "StrikeThrough", "1"))}
+                            Dim font As XElement
+                            If annotations.Contains("X") Then
+                                font = fonts(1)
                             Else
-                                styleNames.Add(style.ToString())
+                                font = fonts(0)
+                            End If
+                            If styleNames.Contains(excelStyle.ToString()) Then
+                            Else
+                                styleNames.Add(excelStyle.ToString())
                                 Dim border As XElement() = {New XElement(ss + "Border", New XAttribute(ss + "Position", "Bottom"), New XAttribute(ss + "LineStyle", "Continuous"), New XAttribute(ss + "Weight", "1")), New XElement(ss + "Border", New XAttribute(ss + "Position", "Left"), New XAttribute(ss + "LineStyle", "Continuous"), New XAttribute(ss + "Weight", "1")), New XElement(ss + "Border", New XAttribute(ss + "Position", "Right"), New XAttribute(ss + "LineStyle", "Continuous"), New XAttribute(ss + "Weight", "1")), New XElement(ss + "Border", New XAttribute(ss + "Position", "Top"), New XAttribute(ss + "LineStyle", "Continuous"), New XAttribute(ss + "Weight", "1"))}
                                 Dim pattern As XAttribute() = {New XAttribute(ss + "Pattern", "Solid"), New XAttribute(ss + "Pattern", "Gray0625"), New XAttribute(ss + "Pattern", "ThinHorzStripe"), New XAttribute(ss + "Pattern", "ThinVertStripe"), New XAttribute(ss + "Pattern", "ThinVertStripe"), New XAttribute(ss + "Pattern", "HorzStripe"), New XAttribute(ss + "Pattern", "VertStripe")}
-                                styles.Add(New XElement(ss + "Style", New XAttribute(ss + "ID", style.ToString()), New XElement(ss + "Borders", border(0), border(1), border(2), border(3)), New XElement(ss + "Interior", New XAttribute(ss + "Color", "#" & style.Color), pattern(style.Shade))))
+                                styles.Add(New XElement(ss + "Style", New XAttribute(ss + "ID", excelStyle.ToString()), New XElement(ss + "Borders", border(0), border(1), border(2), border(3)), font, New XElement(ss + "Interior", New XAttribute(ss + "Color", "#" & excelStyle.Color), pattern(excelStyle.Shade))))
+
                             End If
-                            hrefStyle = style.ToString()
-                            row.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", hrefStyle), New XAttribute(ss + "HRef", $"https://marketsmith.investors.com/mstool?Symbol={stock.TickerSymbol}&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"), New XAttribute(x + "HRefScreenTip", stock.Name & ": sym=" & stock.TickerSymbol & " " & "comp=" & stock.Composite & " RS=" & stock.RS & " SMR=" & stock.SMR & " $vol=" & stock.DollarVolume & " EPS=" & stock.EPS & "Up/Down=" & stock.UpDown), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), stock.TickerSymbol & annotations), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"), industryGroupName)))
+                            hrefStyle = excelStyle.ToString()
+                            row.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", hrefStyle), New XAttribute(ss + "HRef", $"https://marketsmith.investors.com/mstool?Symbol={stock.TickerSymbol}&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"), New XAttribute(x + "HRefScreenTip", stock.Name & ": sym=" & stock.TickerSymbol & " " & "comp=" & stock.Composite & " RS=" & stock.RS & " SMR=" & stock.SMR & " $vol=" & stock.DollarVolume & " EPS=" & stock.EPS & " Up/Down=" & stock.UpDown), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), stock.TickerSymbol & annotations), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"), industryGroupName)))
                         Else
                             Exit For
                         End If
