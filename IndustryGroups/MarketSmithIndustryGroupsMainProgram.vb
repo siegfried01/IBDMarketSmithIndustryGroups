@@ -119,8 +119,9 @@ Module MarketSmithIndustryGroupsMainProgram
                                                               ss:Name="_FilterDatabase"/></Cell>
                                                       <Cell ss:StyleID="s66"><Data ss:Type="String">3 Month Rank Change</Data><NamedCell
                                                               ss:Name="_FilterDatabase"/></Cell>
-                                                      <Cell ss:StyleID="s66"><Data ss:Type="String">6 Month Rank Change</Data><NamedCell
-                                                              ss:Name="_FilterDatabase"/></Cell>
+                                                      <Cell ss:StyleID="s66"><Data ss:Type="String">6 Month Rank Change</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
+                                                      <Cell ss:StyleID="s66"><Data ss:Type="String">% Chg Cur Week</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
+                                                      <Cell ss:StyleID="s66"><Data ss:Type="String">% Chg 1 Month</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
                                                   </Row>
                                                   <Row ss:AutoFitHeight="0">
                                                       <Cell><Data ss:Type="Number">1</Data><NamedCell ss:Name="_FilterDatabase"/></Cell>
@@ -405,6 +406,7 @@ Module MarketSmithIndustryGroupsMainProgram
     End Sub
 
     Private Sub Main2()
+        Dim maxDaysOld As Int16 = 6
         Dim topMemberCount = 19 ' top N members of stocklist to show
         Dim currentExcelColumn = 13
         Dim filesAlreadyLoaded = New HashSet(Of String)
@@ -414,7 +416,7 @@ Module MarketSmithIndustryGroupsMainProgram
         mostIndustryGroups = "MinDollarVol10MComp50.csv"
         filesAlreadyLoaded.Add(mostIndustryGroups)
         filesAlreadyLoaded.Add("197 Industry Groups.csv")
-        Dim ig = IndustryGroupstToEquity.LoadTable($"%USERPROFILE%\Downloads\{mostIndustryGroups}")
+        Dim ig = IndustryGroupstToEquity.LoadTable($"%USERPROFILE%\Downloads\{mostIndustryGroups}", maxDaysOld)
 
         Dim fileNameFavoritesList = New List(Of StockList) From {
             New StockList With {.Name = "IBD Live Ready", .Attributes = New StockListAttributes With {.Annotation = "R"}},
@@ -440,6 +442,8 @@ Module MarketSmithIndustryGroupsMainProgram
             New StockList With {.Name = "Up on Volume", .Attributes = New StockListAttributes With {.Annotation = "U"}},
             New StockList With {.Name = "Additions", .Attributes = New StockListAttributes With {.Annotation = "A", .DisplayName = "Growth 250 Additions"}},
             New StockList With {.Name = "Deletions", .Attributes = New StockListAttributes With {.Annotation = "D", .DisplayName = "Growth 250 Deletions"}},
+            New StockList With {.Name = "Tight Areas", .Attributes = New StockListAttributes With {.Annotation = "r", .DisplayName = "Growth 250 Tight Areas"}},
+            New StockList With {.Name = "All Tight Areas", .Attributes = New StockListAttributes With {.DisplayName = "All Stocks Tight Areas"}},
             New StockList With {.Name = "James P. O'Shaughnessy"},
             New StockList With {.Name = "Martin Zweig"},
             New StockList With {.Name = "Peter Lynch"},
@@ -498,7 +502,7 @@ Module MarketSmithIndustryGroupsMainProgram
 
         For Each name In fileNameFavoritesMap.Keys
             Try
-                marketSmithLists(name) = LoadListFromCsv.LoadListFromCsv("%USERPROFILE%\Downloads\" & name & ".csv")
+                marketSmithLists(name) = LoadListFromCsv.LoadListFromCsv("%USERPROFILE%\Downloads\" & name & ".csv", maxDaysOld)
                 fileNameFavoritesMap(name).CsvFileFoundAndLoaded = True
                 marketSmithListColumnNames(fileNameFavoritesMap(name).ExcelColumn) = name
             Catch ex As MissingFile
@@ -516,7 +520,7 @@ Module MarketSmithIndustryGroupsMainProgram
                 marketSmithListColumnNames(fileNameFavoritesMap(name).ExcelColumn) = name
             Else
                 Try
-                    Dim listOfStocks = LoadListFromCsv.LoadListFromCsv("%USERPROFILE%\Downloads\" & name & ".csv")
+                    Dim listOfStocks = LoadListFromCsv.LoadListFromCsv("%USERPROFILE%\Downloads\" & name & ".csv", maxDaysOld)
                     WriteLine($"Loading list {name}")
                     marketSmithLists(name) = listOfStocks
                     marketSmithListColumnNames(fileNameFavoritesMap(name).ExcelColumn) = name

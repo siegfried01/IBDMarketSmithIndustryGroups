@@ -17,10 +17,10 @@ End Class
 Public Class IndustryGroupstToEquity
 
     ' static function to cvs file
-    Public Shared Function LoadTable(Optional fileName As String = "%USERPROFILE%\Downloads\MinDollarVol20MComp80.csv") As Dictionary(Of String, List(Of Equity))
+    Public Shared Function LoadTable(fileName As String, Optional maxDaysOld As Int16 = 4) As Dictionary(Of String, List(Of Equity))
         Dim displayFileName As String = fileName
         fileName = Environment.ExpandEnvironmentVariables(fileName)
-        IsFileTooOld(fileName, 4, displayFileName)
+        IsFileTooOld(fileName, maxDaysOld, displayFileName)
         Dim result = New Dictionary(Of String, List(Of Equity))
         Dim industryName As String
         Dim symbol As String
