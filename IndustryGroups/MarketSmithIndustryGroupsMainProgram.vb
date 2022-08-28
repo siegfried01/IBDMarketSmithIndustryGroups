@@ -94,7 +94,7 @@ Module MarketSmithIndustryGroupsMainProgram
                                                   <Column ss:Index="9" ss:AutoFitWidth="0" ss:Width="35.25"/>
                                                   <Column ss:AutoFitWidth="0" ss:Width="24.75" ss:Span="3"/>
                                                   <Column ss:Index="14" ss:AutoFitWidth="0" ss:Width="19.5" ss:Span="48"/>
-                                                  <Row ss:AutoFitHeight="0" ss:Height="139.5" ss:StyleID="s64">
+                                                  <Row ss:AutoFitHeight="0" ss:Height="160" ss:StyleID="s64">
                                                       <Cell ss:StyleID="s66"><Data ss:Type="String">Order</Data><NamedCell
                                                               ss:Name="_FilterDatabase"/></Cell>
                                                       <Cell ss:StyleID="s66"><Data ss:Type="String">Symbol</Data><NamedCell
@@ -419,50 +419,7 @@ Module MarketSmithIndustryGroupsMainProgram
         Dim ig = IndustryGroupstToEquity.LoadTable($"%USERPROFILE%\Downloads\{mostIndustryGroups}", maxDaysOld)
 
         ' @@todo@@ delete this initialization because we are reading from XML file instead
-        Dim fileNameFavoritesList = New List(Of StockList) From {
-            New StockList With {.Name = "IBD Live Ready", .Attributes = New StockListAttributes With {.Annotation = "R"}},
-            New StockList With {.Name = "IBD Live Watch", .Attributes = New StockListAttributes With {.Annotation = "W"}},
-            New StockList With {.Name = "Long Term Leaders", .Attributes = New StockListAttributes With {.Annotation = "L"}},
-            New StockList With {.Name = "Long Term Leaders Watch"},
-            New StockList With {.Name = "IBD 50 Index", .Attributes = New StockListAttributes With {.Annotation = "5"}},
-            New StockList With {.Name = "IBD Big Cap 20", .Attributes = New StockListAttributes With {.Annotation = "2"}},
-            New StockList With {.Name = "LB Leaders"},
-            New StockList With {.Name = "LB Watch"},
-            New StockList With {.Name = "LB Spotlight", .Attributes = New StockListAttributes With {.Annotation = "g"}},
-            New StockList With {.Name = "LB Sector Leaders", .Attributes = New StockListAttributes With {.Annotation = "d"}},
-            New StockList With {.Name = "LB Top 10"},
-            New StockList With {.Name = "Fundamental Strength", .Attributes = New StockListAttributes With {.Annotation = "F"}},
-            New StockList With {.Name = "Technical Strength", .Attributes = New StockListAttributes With {.Annotation = "T"}},
-            New StockList With {.Name = "Extended Stocks"},
-            New StockList With {.Name = "RS Line New High", .Attributes = New StockListAttributes With {.Annotation = "h"}},
-            New StockList With {.Name = "All RS Line New High", .Attributes = New StockListAttributes With {.Annotation = "H"}},
-            New StockList With {.Name = "RS Line Blue Dot", .Attributes = New StockListAttributes With {.Annotation = "B"}},
-            New StockList With {.Name = "RS Line 5% New High", .Attributes = New StockListAttributes With {.Annotation = "%"}},
-            New StockList With {.Name = "Top 30 RS Rating Stocks with High Avg. Volume", .Attributes = New StockListAttributes With {.Annotation = "v", .DisplayName = "Top 30 RS Hi Avg Volume"}},
-            New StockList With {.Name = "Top 30 EPS Rating Stocks with High Avg. Volume", .Attributes = New StockListAttributes With {.Annotation = "V", .DisplayName = "Top 30 EPS Hi Avg Volume"}},
-            New StockList With {.Name = "Additions", .Attributes = New StockListAttributes With {.Annotation = "A", .DisplayName = "Growth 250 Additions"}},
-            New StockList With {.Name = "Deletions", .Attributes = New StockListAttributes With {.Annotation = "D", .DisplayName = "Growth 250 Deletions"}},
-            New StockList With {.Name = "Tight Areas", .Attributes = New StockListAttributes With {.Annotation = "r", .DisplayName = "Growth 250 Tight Areas"}},
-            New StockList With {.Name = "Near Pivot", .Attributes = New StockListAttributes With {.Annotation = "n", .DisplayName = "Growth 250 Near Pivot"}},
-            New StockList With {.Name = "All Tight Areas", .Attributes = New StockListAttributes With {.Annotation = "t", .DisplayName = "All Stocks Tight Areas"}},
-            New StockList With {.Name = "Short Term Stacked Avgs", .Attributes = New StockListAttributes With {.Annotation = "x"}},
-            New StockList With {.Name = "Long Term Stacked Avgs", .Attributes = New StockListAttributes With {.Annotation = "X"}},
-            New StockList With {.Name = "ETF Short Term Strength", .Attributes = New StockListAttributes With {.Annotation = "E"}},
-            New StockList With {.Name = "Barron's Value and Momentum", .Attributes = New StockListAttributes With {.Annotation = "M"}},
-            New StockList With {.Name = "Bases Forming", .Attributes = New StockListAttributes With {.Annotation = "f"}},
-            New StockList With {.Name = "Up on Volume", .Attributes = New StockListAttributes With {.Annotation = "U", .DisplayName = "All Stocks Up on Volume"}},
-            New StockList With {.Name = "Up in Price 20 day Vol", .Attributes = New StockListAttributes With {.Annotation = "P"}},
-            New StockList With {.Name = "Up in Price 5 day Vol", .Attributes = New StockListAttributes With {.Annotation = "p"}},
-            New StockList With {.Name = "James P. O'Shaughnessy"},
-            New StockList With {.Name = "Martin Zweig"},
-            New StockList With {.Name = "Peter Lynch"},
-            New StockList With {.Name = "Benjamin Graham"},
-            New StockList With {.Name = "Warren Buffett"},
-            New StockList With {.Name = "William J. O'Neil"},
-            New StockList With {.Name = "Large Cap", .Attributes = New StockListAttributes With {.Annotation = "l"}},
-            New StockList With {.Name = "Mid Cap", .Attributes = New StockListAttributes With {.Annotation = "m"}},
-            New StockList With {.Name = "Small Cap", .Attributes = New StockListAttributes With {.Annotation = "s"}}
-        }
+        Dim fileNameFavoritesList = New List(Of StockList)
 
         fileNameFavoritesList = RestoreFromXML()
 
@@ -730,17 +687,35 @@ Module MarketSmithIndustryGroupsMainProgram
     ''' </summary>
     ''' <returns>List of Favorite Stocks</returns>
     Private Function RestoreFromXML() As List(Of StockList)
-        Dim fileNameFavoritesList = New List(Of StockList)
-        Dim fn = "..\..\..\..\MarketSmithFavoriteStockLists.xml"
-        If Not System.IO.File.Exists(fn) Then
-            fn = System.Environment.ExpandEnvironmentVariables("%USERPROFILE%\Downloads\MarketSmithFavoriteStockLists.xml")
-        End If
+        Dim favoriteStocksList = New List(Of StockList)
+        Dim fn As String = FindFavoriteStockListFile()
         Dim favoritesList = System.IO.File.ReadAllText(fn)
-        Dim xmlSerializer As System.Xml.Serialization.XmlSerializer = New System.Xml.Serialization.XmlSerializer(fileNameFavoritesList.GetType)
+        Dim xmlSerializer As System.Xml.Serialization.XmlSerializer = New System.Xml.Serialization.XmlSerializer(favoriteStocksList.GetType)
         Dim ns As New System.Xml.Serialization.XmlSerializerNamespaces
         Dim string_reader As New System.IO.StringReader(favoritesList)
-        fileNameFavoritesList = xmlSerializer.Deserialize(string_reader)
-        Return fileNameFavoritesList
+        favoriteStocksList = xmlSerializer.Deserialize(string_reader)
+        For Each favorite In favoriteStocksList
+            favorite.Name = favorite.Name.Trim
+        Next
+        Return favoriteStocksList
+    End Function
+
+    Private Function FindFavoriteStockListFile() As String
+        Dim found = False
+        Dim fn = "MarketSmithFavoriteStockLists.xml"
+        For ii = 1 To 6
+            If System.IO.File.Exists(fn) Then
+                found = True
+                Exit For
+            Else
+                fn = "..\" + fn
+            End If
+        Next
+        If Not found Then
+            fn = System.Environment.ExpandEnvironmentVariables("%USERPROFILE%\Downloads\MarketSmithFavoriteStockLists.xml")
+        End If
+
+        Return fn
     End Function
 
     Private Sub AddStockListExcelColumnHeaders(ByRef additionalNonFavoriteFiles As HashSet(Of String), ByRef fileNameFavoritesList As List(Of StockList), ByRef fileNameFavoritesMap As SortedDictionary(Of String, StockListAttributes), ByRef nextColumn As Integer, ss As XNamespace, ByRef industryGroupRows As IEnumerable(Of XElement))
