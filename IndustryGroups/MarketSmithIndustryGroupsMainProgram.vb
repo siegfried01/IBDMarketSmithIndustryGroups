@@ -700,22 +700,46 @@ Module MarketSmithIndustryGroupsMainProgram
         Return favoriteStocksList
     End Function
 
-    Private Function FindFavoriteStockListFile() As String
-        Dim found = False
-        Dim fn = "MarketSmithFavoriteStockLists.xml"
-        For ii = 1 To 6
-            If System.IO.File.Exists(fn) Then
-                found = True
-                Exit For
-            Else
-                fn = "..\" + fn
-            End If
-        Next
-        If Not found Then
-            fn = System.Environment.ExpandEnvironmentVariables("%USERPROFILE%\Downloads\MarketSmithFavoriteStockLists.xml")
+    Private fileNamePattern = New System.Text.RegularExpressions.Regex("[\\/][^\\/]+$")
+    Private prefix = New System.Text.RegularExpressions.Regex("file:///")
+    Private slash = New System.Text.RegularExpressions.Regex("/")
+    Private Function FindFavoriteStockListFile(Optional fileName = "MarketSmithFavoriteStockLists.xml", Optional climbTreeLevels = 6) As String
+        Dim result = ""
+        result = ClimbeExecutableFileTreeFindFile(fileName, climbTreeLevels, result)
+        ClimbDefaultDirectorTreeFindFile(fileName, climbTreeLevels, result)
+        If String.IsNullOrEmpty(result) Then result = System.Environment.ExpandEnvironmentVariables("%USERPROFILE%\Downloads\MarketSmithFavoriteStockLists.xml")
+        Return result
+    End Function
+    Private Sub ClimbDefaultDirectorTreeFindFile(ByRef fileName As Object, climbTreeLevels As Object, ByRef result As String)
+        If String.IsNullOrEmpty(result) Then
+            For ii = 1 To climbTreeLevels
+                If File.Exists(fileName) Then
+                    result = fileName
+                Else
+                    fileName = "..\" + fileName
+                End If
+            Next
+        End If
+    End Sub
+    Private Function ClimbeExecutableFileTreeFindFile(fileName As Object, climbTreeLevels As Object, result As String) As String
+        Dim exeCodePath = Reflection.Assembly.GetExecutingAssembly().CodeBase
+        If String.IsNullOrEmpty(result) Then
+            For ii = 1 To climbTreeLevels
+                If exeCodePath.Length < 2 Then
+                    Exit For
+                End If
+                exeCodePath = fileNamePattern.Replace(exeCodePath, "")
+                Dim candidatePath = exeCodePath & "/" & fileName
+                Dim foundPath = prefix.Replace(candidatePath, "")
+                foundPath = slash.Replace(foundPath, "\\")
+                If File.Exists(foundPath) Then
+                    result = foundPath
+                    Exit For
+                End If
+            Next
         End If
 
-        Return fn
+        Return result
     End Function
 
     Private Sub AddStockListExcelColumnHeaders(ByRef additionalNonFavoriteFiles As HashSet(Of String), ByRef fileNameFavoritesList As List(Of StockList), ByRef fileNameFavoritesMap As SortedDictionary(Of String, StockListAttributes), ByRef nextColumn As Integer, ss As XNamespace, ByRef industryGroupRows As IEnumerable(Of XElement))
@@ -825,6 +849,7 @@ Module MarketSmithIndustryGroupsMainProgram
     Sub AdjustIndustryGroupTableColumnCount(TopMemberCount As Integer, nsMgr As XmlNamespaceManager, ss As XNamespace)
         Dim industryGroupTable = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table", nsMgr).First
         industryGroupTable.Attributes(ss + "ExpandedColumnCount").Remove
-        industryGroupTable.SetAttributeValue(ss + "ExpandedColumnCount", (25 + TopMemberCount).ToString())
+        ' @@bug@@: need to adjust workbook/worksheet/table/columns as we add columns.. not sure why 62 works as minimum.. current count is 58
+        industryGroupTable.SetAttributeValue(ss + "ExpandedColumnCount", Math.Max(62, 25 + TopMemberCount).ToString())
     End Sub
 End Module
