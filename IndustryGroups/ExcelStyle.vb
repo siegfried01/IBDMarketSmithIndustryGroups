@@ -2,7 +2,7 @@
     Private hueValue = 100.0F
     Public Property Hue As Single
         Get
-            Return hueValue * HueScale + HueOffset
+            Return hueValue * HueScale + HueOffset ' use linear mapping to compute hue based some metric like composite value. HueOffest & HueScale were perviously computed from the composit rating
         End Get
         Set(value As Single)
             hueValue = value

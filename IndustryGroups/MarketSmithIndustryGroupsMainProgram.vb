@@ -464,7 +464,7 @@ Module MarketSmithIndustryGroupsMainProgram
         AdjustWorksheetColumnCount(topMemberCount + additionalNonFavoriteFiles.Count, nsMgr, ss)
         Dim industryGroupRows As IEnumerable(Of XElement) = industryGroups.XPathSelectElements("ss:Workbook/ss:Worksheet/ss:Table/ss:Row", nsMgr)
         Dim styles As XElement = industryGroups.XPathSelectElement("ss:Workbook/ss:Styles", nsMgr)
-        Dim styleNames As HashSet(Of String) = New HashSet(Of String)
+        Dim styleNames As HashSet(Of String) = New HashSet(Of String) ' names of styles to be used for color coding cells
         'Dim filterDimensions = industryGroups.XPathEvaluate("ss:Workbook/ss:Worksheet/ss:Names/ss:NamedRange/@ss:RefersTo", nsMgr)
 
 
@@ -607,15 +607,17 @@ Module MarketSmithIndustryGroupsMainProgram
                             Next
                             Dim hrefStyle As String
                             If annotations.Contains("X") Then
-                                hrefStyle = hrefStyleStrikeThru
+                                hrefStyle = hrefStyleStrikeThru ' For extended stocks
                             Else
                                 hrefStyle = hrefStyleNormal
                             End If
-                            ' x= 40 to 100, y= 0 to 140
-                            ' emacs calc: solve([40*m+b=0, 100*m+b=140],[m,b])==[m = 2.33333333333, b = -93.3333333333]
+                            ' Begin implementation of color (hue) coding of stocks by composite rating
+                            'x is input (composite rating) with range x= 40 to 100 ... we are not interested in stocks with composite rating less than 40
+                            'y is output (hue) with range y= 0 (red) to 140 (blue)
+                            'We have two equations and two unknowns, use emacs calc: solve([40*m+b=0, 100*m+b=140],[m,b])==[m = 2.33333333333, b = -93.3333333333]
                             Dim excelStyle = New ExcelStyle() With {.HueOffset = -93.33F, .HueScale = 2.3333F, .Saturation = 200.0F, .Luminesence = 200.0F}
-                            excelStyle.Hue = Convert.ToInt32(stock.Composite + 0.5)
-                            If annotations.Contains("X") Then excelStyle.Font = 1
+                            excelStyle.Hue = Convert.ToInt32(stock.Composite + 0.5) ' this is bogus
+                            If annotations.Contains("X") Then excelStyle.Font = 1 ' use strike thu font for Extended stocks
                             If stock.DollarVolume > 20 * 1000 Then
                                 excelStyle.Shade = 0
                             ElseIf stock.DollarVolume > 15 * 1000 Then
@@ -629,20 +631,20 @@ Module MarketSmithIndustryGroupsMainProgram
                             End If
                             Dim fonts As XElement() = {New XElement(ss + "Font", New XAttribute(ss + "FontName", "Calibri"), New XAttribute(ss + "Size", 11), New XAttribute(ss + "Bold", 1), New XAttribute(ss + "Color", "#0066CC"), New XAttribute(ss + "Underline", "Single")), New XElement(ss + "Font", New XAttribute(ss + "FontName", "Calibri"), New XAttribute(ss + "Size", 11), New XAttribute(ss + "Bold", 1), New XAttribute(ss + "Color", "#0066CC"), New XAttribute(ss + "Underline", "Single"), New XAttribute(ss + "StrikeThrough", "1"))}
                             Dim font As XElement
-                            If annotations.Contains("X") Then
+                            If annotations.Contains("X") Then ' X is used by the Extended list which uses the strike thru font
                                 font = fonts(1)
                             Else
                                 font = fonts(0)
                             End If
-                            If styleNames.Contains(excelStyle.ToString()) Then
-                            Else
+                            If styleNames.Contains(excelStyle.ToString()) Then ' hue is computed here
+                            Else ' create a new style and remember the name
                                 styleNames.Add(excelStyle.ToString())
                                 Dim border As XElement() = {New XElement(ss + "Border", New XAttribute(ss + "Position", "Bottom"), New XAttribute(ss + "LineStyle", "Continuous"), New XAttribute(ss + "Weight", "1")), New XElement(ss + "Border", New XAttribute(ss + "Position", "Left"), New XAttribute(ss + "LineStyle", "Continuous"), New XAttribute(ss + "Weight", "1")), New XElement(ss + "Border", New XAttribute(ss + "Position", "Right"), New XAttribute(ss + "LineStyle", "Continuous"), New XAttribute(ss + "Weight", "1")), New XElement(ss + "Border", New XAttribute(ss + "Position", "Top"), New XAttribute(ss + "LineStyle", "Continuous"), New XAttribute(ss + "Weight", "1"))}
                                 Dim pattern As XAttribute() = {New XAttribute(ss + "Pattern", "Solid"), New XAttribute(ss + "Pattern", "Gray0625"), New XAttribute(ss + "Pattern", "ThinHorzStripe"), New XAttribute(ss + "Pattern", "ThinVertStripe"), New XAttribute(ss + "Pattern", "ThinVertStripe"), New XAttribute(ss + "Pattern", "HorzStripe"), New XAttribute(ss + "Pattern", "VertStripe")}
                                 styles.Add(New XElement(ss + "Style", New XAttribute(ss + "ID", excelStyle.ToString()), New XElement(ss + "Borders", border(0), border(1), border(2), border(3)), font, New XElement(ss + "Interior", New XAttribute(ss + "Color", "#" & excelStyle.Color), pattern(excelStyle.Shade))))
 
                             End If
-                            hrefStyle = excelStyle.ToString()
+                            hrefStyle = excelStyle.ToString() ' hue is computed here
                             row.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", hrefStyle), New XAttribute(ss + "HRef", $"https://marketsmith.investors.com/mstool?Symbol={stock.TickerSymbol}&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"), New XAttribute(x + "HRefScreenTip", stock.Name & ": sym=" & stock.TickerSymbol & " " & "comp=" & stock.Composite & " RS=" & stock.RS & " SMR=" & stock.SMR & " $vol=" & stock.DollarVolume & " EPS=" & stock.EPS & " Up/Down=" & stock.UpDown), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), stock.TickerSymbol & annotations), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"), industryGroupName)))
                         Else
                             Exit For
@@ -758,9 +760,9 @@ Module MarketSmithIndustryGroupsMainProgram
                     End If
                     Dim stockListName As String
                     If String.IsNullOrEmpty(stockList.Attributes.DisplayName) Then
-                        stockListName = stockList.Name
+                        stockListName = stockList.Name.Trim
                     Else
-                        stockListName = stockList.Attributes.DisplayName
+                        stockListName = stockList.Attributes.DisplayName.Trim
                     End If
                     headerRow.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", "s66"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), stockListName & annotation), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"))))
                 Else
