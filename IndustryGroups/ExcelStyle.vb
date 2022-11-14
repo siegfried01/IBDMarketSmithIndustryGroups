@@ -14,7 +14,52 @@
     Public Property Luminesence As Single = 200.0F
     Public Property Font As Int16 = 0
     Public Property Shade As Int16
+    Private ymax As Single
+    Public Property HueMax As Single
+        Get
+            Return ymax
+        End Get
+        Set(value As Single)
+            ymax = value
+            recalc()
+        End Set
+    End Property
+    Private ymin As Single
+    Public Property HueMin As Single
+        Get
+            Return ymin
+        End Get
+        Set(value As Single)
+            ymin = value
+            recalc()
+        End Set
+    End Property
+    Private xmax As Single
+    Public Property InputMetricMax As Single
+        Get
+            Return xmax
+        End Get
+        Set(value As Single)
+            xmax = value
+            recalc()
+        End Set
+    End Property
 
+    Private Sub recalc()
+        HueScale = (HueMin + (xmax * HueMin / xmin - HueMax) / (1 - xmax / xmin)) / xmin
+        HueOffset = (HueMax - xmax * HueMin / xmin) / (1 - xmax / xmin)
+    End Sub
+
+    Private xmin As Single
+    Public Property InputMetricMin As Single
+        Get
+            Return xmin
+        End Get
+        Set(value As Single)
+            xmin = value
+            recalc()
+        End Set
+    End Property
     Public Property BorderColor As String = "#000000"
     Public Property BorderWeight As String = "1"
 

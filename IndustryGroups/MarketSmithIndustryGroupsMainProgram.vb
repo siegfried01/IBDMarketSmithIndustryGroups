@@ -615,7 +615,7 @@ Module MarketSmithIndustryGroupsMainProgram
                             'x is input (composite rating) with range x= 40 to 100 ... we are not interested in stocks with composite rating less than 40
                             'y is output (hue) with range y= 0 (red) to 140 (blue)
                             'We have two equations and two unknowns, use emacs calc: solve([40*m+b=0, 100*m+b=140],[m,b])==[m = 2.33333333333, b = -93.3333333333]
-                            Dim excelStyle = New ExcelStyle() With {.HueOffset = -93.33F, .HueScale = 2.3333F, .Saturation = 200.0F, .Luminesence = 200.0F}
+                            Dim excelStyle = New ExcelStyle() With {.Saturation = 200.0F, .Luminesence = 200.0F, .HueMin = 0, .HueMax = 140, .InputMetricMin = 40, .InputMetricMax = 100}
                             excelStyle.Hue = Convert.ToInt32(stock.Composite + 0.5) ' this is bogus
                             If annotations.Contains("X") Then excelStyle.Font = 1 ' use strike thu font for Extended stocks
                             If stock.DollarVolume > 20 * 1000 Then
