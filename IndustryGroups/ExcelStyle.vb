@@ -1,12 +1,17 @@
 ﻿Public Class ExcelStyle
-    Private hueValue = 100.0F
-    Public Property Hue As Single
+    Public Property InputMetric As Single ' input metric is something like the composite value, or EPS rating
         Get
-            Return hueValue * HueScale + HueOffset ' use linear mapping to compute hue based some metric like composite value. HueOffest & HueScale were perviously computed from the composit rating
+            Return inMetric
         End Get
         Set(value As Single)
-            hueValue = value
+            inMetric = value
         End Set
+    End Property
+    Private inMetric = 100.0F
+    Public ReadOnly Property Hue As Single
+        Get
+            Return InputMetric * HueScale + HueOffset ' use linear mapping to compute hue based some metric like composite value. HueOffest & HueScale were perviously computed from the composit rating
+        End Get
     End Property
     Public Property HueScale As Single = 2.3F
     Public Property HueOffset As Single = 93.3F
@@ -45,7 +50,7 @@
         End Set
     End Property
 
-    Private Sub recalc()
+    Public Sub recalc()
         HueScale = (HueMin + (xmax * HueMin / xmin - HueMax) / (1 - xmax / xmin)) / xmin
         HueOffset = (HueMax - xmax * HueMin / xmin) / (1 - xmax / xmin)
     End Sub
@@ -63,19 +68,19 @@
     Public Property BorderColor As String = "#000000"
     Public Property BorderWeight As String = "1"
 
-    Public Property Color As String
+    Public ReadOnly Property Color As String
         Get
             Dim c = ColorConverter.HslToRgba(Hue / 255.0F, Saturation / 255.0F, Luminesence / 255.0F)
             Return String.Format("{0:X2}{1:X2}{2:X2}", c.R, c.G, c.B)
         End Get
-        Set(value As String)
-            Hue = Convert.ToInt16(value.Substring(0, 2), 16)
-            Saturation = Convert.ToInt16(value.Substring(2, 2), 16) / 255.0F
-            Luminesence = Convert.ToInt16(value.Substring(4, 2), 16) / 255.0F
-        End Set
+        'Set(value As String)
+        '    Hue = Convert.ToInt16(value.Substring(0, 2), 16)
+        '    Saturation = Convert.ToInt16(value.Substring(2, 2), 16) / 255.0F
+        '    Luminesence = Convert.ToInt16(value.Substring(4, 2), 16) / 255.0F
+        'End Set
     End Property
 
     Public Overrides Function ToString() As String
-        Return "s_h" & Hue & "_f" & Font & "_s" & Shade
+        Return "s_h" & Convert.ToInt16(Hue + 0.5) & "_f" & Font & "_s" & Shade
     End Function
 End Class
