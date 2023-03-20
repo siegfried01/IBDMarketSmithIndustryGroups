@@ -98,7 +98,7 @@ Module LoadListFromCsv
         Next
         While tfp.EndOfData = False
             Dim fields = tfp.ReadFields()
-            symbol = fields(colNames("Symbol"))
+            symbol = fields(colNames("Symbol")) ' @@todo@@ throw an exception here if this fails because it means we have a bogus file that can be ignored.
             result.Add(symbol)
         End While
         'Catch ex As Exception

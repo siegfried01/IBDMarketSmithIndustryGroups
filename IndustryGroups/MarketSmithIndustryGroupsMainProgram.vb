@@ -599,6 +599,10 @@ Module MarketSmithIndustryGroupsMainProgram
                         End If
                     Next
 
+                    Dim totalGroupPrice = 0
+                    For Each stock In stocksInCurrentIndustryGroup
+                        totalGroupPrice += stock.Price
+                    Next
                     ' add ticker symbol links for top stocks in current industry group
                     Dim count = 0
                     For Each stock In stocksInCurrentIndustryGroup
@@ -656,7 +660,7 @@ Module MarketSmithIndustryGroupsMainProgram
 
                             End If
                             hrefStyle = stockExcelStyle.ToString() ' hue is computed here
-                            row.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", hrefStyle), New XAttribute(ss + "HRef", $"https://marketsmith.investors.com/mstool?Symbol={stock.TickerSymbol}&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"), New XAttribute(x + "HRefScreenTip", stock.Name & ": sym=" & stock.TickerSymbol & " " & "comp=" & stock.Composite & " RS=" & stock.RS & " SMR=" & stock.SMR & " $vol=" & stock.DollarVolume & " EPS=" & stock.EPS & " Up/Down=" & stock.UpDown), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), stock.TickerSymbol & annotations), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"), industryGroupName)))
+                            row.Add(New XElement(ss + "Cell", New XAttribute(ss + "StyleID", hrefStyle), New XAttribute(ss + "HRef", $"https://marketsmith.investors.com/mstool?Symbol={stock.TickerSymbol}&amp;Periodicity=Daily&amp;InstrumentType=Stock&amp;Source=sitemarketcondition&amp;AlertSubId=8241925&amp;ListId=0&amp;ParentId=0"), New XAttribute(x + "HRefScreenTip", stock.Name & ": sym=" & stock.TickerSymbol & " " & "price=" & stock.Price & " " & "comp=" & stock.Composite & " RS=" & stock.RS & " SMR=" & stock.SMR & " $vol=" & stock.DollarVolume & " EPS=" & stock.EPS & " Up/Down=" & stock.UpDown & " group price Portion=" & (stock.Price * 100.0 / totalGroupPrice).ToString("##.0") & "%"), New XElement(ss + "Data", New XAttribute(ss + "Type", "String"), stock.TickerSymbol & annotations), New XElement(ss + "NamedCell", New XAttribute(ss + "Name", "_FilterDatabase"), industryGroupName)))
                         Else
                             Exit For
                         End If

@@ -25,12 +25,15 @@ Public Class IndustryGroupstToEquity
         Dim industryName As String
         Dim symbol As String
         Dim compRating As Double
+        Dim lineCount As Integer
 
         Dim tfp As New TextFieldParser(fileName)
         tfp.Delimiters = New String() {","}
         tfp.TextFieldType = FieldType.Delimited
 
-        Dim colArray = tfp.ReadLine().Split(","c).ToList().Select(Of String)(Function(x) x.Substring(1, x.Length - 2).ToArray())
+        Dim line As String = tfp.ReadLine()
+        Dim colArray = line.Split(","c).ToList().Select(Of String)(Function(x) x.Substring(1, x.Length - 2).ToArray())
+        lineCount += 1
         Dim colNames = New Dictionary(Of String, Integer)
         Dim i = 0
         For Each col In colArray
@@ -47,7 +50,7 @@ Public Class IndustryGroupstToEquity
             Dim rs = ParseField(colNames, fields, "RS Rating") 'Double.Parse(fields(colNames("RS Rating")), CultureInfo.InvariantCulture)
             Dim smr = fields(colNames("SMR Rating"))
             Dim ad = fields(colNames("A/D Rating"))
-            Dim yield = Double.Parse(fields(colNames("Yield %")), CultureInfo.InvariantCulture)
+            Dim yield = GetYield(colNames, fields, line, fileName, lineCount)
             Dim eps = ParseField(colNames, fields, "EPS Rating") 'Double.Parse(fields(colNames("EPS Rating")), CultureInfo.InvariantCulture)
             Dim upDown = ParseField(colNames, fields, "Up/Down Vol")
             Dim name = fields(colNames("Name"))
@@ -69,6 +72,29 @@ Public Class IndustryGroupstToEquity
                 result.Add(industryName, New List(Of Equity) From {eq})
             End If
         End While
+        Return result
+    End Function
+
+    Private Shared Function GetYield(colNames As Dictionary(Of String, Integer), fields() As String, line As String, fileName As String, lineCount As Integer) As Double
+        Dim result As Double
+        Dim yieldField As String = ""
+        Dim colName As Integer
+        Try
+            colName = colNames("Yield %")
+            yieldField = fields(colName)
+            If String.IsNullOrWhiteSpace(yieldField) Then
+                result = 0
+            Else
+                result = Double.Parse(yieldField, CultureInfo.InvariantCulture)
+            End If
+        Catch ex As Exception
+            If String.IsNullOrWhiteSpace(yieldField) Then
+                WriteLine("Yield is empty!" & " file name =" & fileName & " line count =" & lineCount.ToString() & " line=" & line)
+            Else
+                WriteLine("Trouble parsing yield=""" & yieldField & """ columnCount = " & colName.ToString() & " file name =" & fileName & " line =" & lineCount.ToString())
+            End If
+            Throw
+        End Try
         Return result
     End Function
 
