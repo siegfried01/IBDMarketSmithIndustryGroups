@@ -98,7 +98,12 @@ Module LoadListFromCsv
         Next
         While tfp.EndOfData = False
             Dim fields = tfp.ReadFields()
-            symbol = fields(colNames("Symbol")) ' @@todo@@ throw an exception here if this fails because it means we have a bogus file that can be ignored.
+            Try
+                symbol = fields(colNames("Symbol")) ' @@todo@@ throw an exception here if this fails because it means we have a bogus file that can be ignored.
+            Catch ex As System.Collections.Generic.KeyNotFoundException
+                WriteLine("Key Not found exception: file=" & fileName)
+                Throw New BadCSVFileException(fileName)
+            End Try
             result.Add(symbol)
         End While
         'Catch ex As Exception

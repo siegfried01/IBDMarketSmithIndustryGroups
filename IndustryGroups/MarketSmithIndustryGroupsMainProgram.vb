@@ -502,6 +502,11 @@ Module MarketSmithIndustryGroupsMainProgram
                 Catch ex As MissingFile
                     marketSmithLists.Remove(name)
                     WriteLine("Favorite Market Smith List """ & name & """ is missing")
+                Catch ex As BadCSVFileException
+                    Dim badFile As String
+                    badFile = ex.FileName
+                    WriteLine("KeyNotFoundException from file """ & badFile & """. Skipping this file")
+                    marketSmithLists.Remove(badFile)
                 End Try
 
             End If
