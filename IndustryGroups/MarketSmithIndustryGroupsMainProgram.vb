@@ -384,7 +384,21 @@ Module MarketSmithIndustryGroupsMainProgram
                                           </Worksheet>
                                       </Workbook>
 
-
+    Dim skipFiles As HashSet(Of String) = New HashSet(Of String)() From {
+    "uuu Siegfried Owns",
+    "www Jun 18 ML Swad",
+    "xxx Swad Jun 28",
+    "yyy Swad Jun 21",
+    "zzz Jun 18 ML Swad",
+    "zzz Swad Jun 28",
+    "zzz Swad Jun",
+    "zzzBofANotes",
+    "zzzCFRANotes",
+    "zzzIBDLNNotes",
+    "zzzMSTARNotes",
+    "zzzNEWSMLNotes",
+    "zzzNEWSMSNotes"
+        }
     Sub Main(args As String())
         Dim catchExceptions As Boolean = False
         If catchExceptions Then
@@ -452,7 +466,15 @@ Module MarketSmithIndustryGroupsMainProgram
         For Each fileName In Directory.GetFiles(System.Environment.ExpandEnvironmentVariables("%USERPROFILE%\Downloads"), "*.csv")
             fileName = Path.GetFileName(fileName)
             If filesAlreadyLoaded.Contains(fileName) Then Continue For
-            additionalNonFavoriteFiles.Add(fileName)
+            Dim name = ""
+            If (fileName.Length > 4) Then
+                name = fileName.Substring(0, fileName.Length - 4)
+            End If
+            If skipFiles.Contains(name) Then
+                WriteLine($"Skipping %DN%/{fileName}")
+            Else
+                additionalNonFavoriteFiles.Add(fileName)
+            End If
         Next
 
         Dim marketSmithListColumnNames = New SortedDictionary(Of Int16, String)
@@ -476,25 +498,34 @@ Module MarketSmithIndustryGroupsMainProgram
 
 
         For Each name In fileNameFavoritesMap.Keys
-            Try
-                marketSmithLists(name) = LoadListFromCsv.LoadListFromCsv("%USERPROFILE%\Downloads\" & name & ".csv", maxDaysOld)
-                fileNameFavoritesMap(name).CsvFileFoundAndLoaded = True
-                marketSmithListColumnNames(fileNameFavoritesMap(name).ExcelColumn) = name
-            Catch ex As MissingFile
-                fileNameFavoritesMap(name).CsvFileFoundAndLoaded = False
-                WriteLine("Favorite Market Smith List """ & name & """ is missing")
-            End Try
-            ' add XML column headers here
+            If skipFiles.Contains(name) Then
+                WriteLine($"Skipping file %DN%/{name}")
+            Else
+                Try
+                    WriteLine($"Loading list %DN%/{name}")
+                    marketSmithLists(name) = LoadListFromCsv.LoadListFromCsv("%USERPROFILE%\Downloads\" & name & ".csv", maxDaysOld)
+                    fileNameFavoritesMap(name).CsvFileFoundAndLoaded = True
+                    marketSmithListColumnNames(fileNameFavoritesMap(name).ExcelColumn) = name
+                Catch ex As MissingFile
+                    fileNameFavoritesMap(name).CsvFileFoundAndLoaded = False
+                    WriteLine("Favorite Market Smith List """ & name & """ is missing")
+                End Try
+                ' add XML column headers here
+            End If
         Next
+
 
         AddStockListExcelColumnHeaders(additionalNonFavoriteFiles, fileNameFavoritesList, fileNameFavoritesMap, currentExcelColumn, ss, industryGroupRows)        'fileNameFavoritesMap now containes all the files that were loaded and the column positions for both the favorite and non-favorite files.
 
         For Each name In fileNameFavoritesMap.Keys
-            If marketSmithLists.ContainsKey(name) Then
+            If skipFiles.Contains(name) Then
+                WriteLine("Skipping file %DN%/" & name)
+            ElseIf marketSmithLists.ContainsKey(name) Then
                 WriteLine($"{name} is already loaded")
                 marketSmithListColumnNames(fileNameFavoritesMap(name).ExcelColumn) = name
             Else
                 Try
+                    WriteLine($"Loading file %DN%/{name}")
                     Dim listOfStocks = LoadListFromCsv.LoadListFromCsv("%USERPROFILE%\Downloads\" & name & ".csv", maxDaysOld)
                     WriteLine($"Loading list {name}")
                     marketSmithLists(name) = listOfStocks

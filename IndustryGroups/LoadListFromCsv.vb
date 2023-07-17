@@ -63,7 +63,7 @@ Module LoadListFromCsv
             Dim diff = now.Subtract(fileDate)
             If diff.TotalDays > days Then
                 ' delete the file
-                File.Delete(fileName)
+                'File.Delete(fileName)
                 Throw New Exception("File is too old: " & displayFileName & " File has been deleted.")
             End If
         Else
